@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import NavTemporal from '../componentes/NavTemporal';
-import { agendarCita, obtenerPacientes } from '../api/api';
+import { agendarCita, obtenerPacientes, obtenerDoctores } from '../api/api';
 
 export default function AgendarCita() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Pacientes precargados o desde API
+  // Pacientes y doctores cargados dinámicamente desde MongoDB Atlas
   const [pacientes, setPacientes] = useState([]);
   const [pacienteSeleccionado, setPacienteSeleccionado] = useState('');
+  const [doctores, setDoctores] = useState([]);
 
   const [form, setForm] = useState({
     pacienteExpediente: '',
@@ -17,7 +18,7 @@ export default function AgendarCita() {
     telefono: '',
     correo: '',
     especialidad: 'Medicina General',
-    doctor: 'Dr. Diego Leal',
+    doctor: '',
     fecha: '',
     hora: '09:00',
     duracionMinutos: 30,
@@ -27,6 +28,40 @@ export default function AgendarCita() {
   const [confirmada, setConfirmada] = useState(false);
   const [cargando, setCargando] = useState(false);
   const [errorEmpalme, setErrorEmpalme] = useState(null);
+
+  // Cargar lista de doctores reales desde MongoDB
+  useEffect(() => {
+    obtenerDoctores()
+      .then(res => {
+        if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
+          setDoctores(res.data);
+          // Seleccionar el primer doctor de la BD por defecto si no hay ninguno
+          setForm(prev => {
+            if (!prev.doctor) {
+              const primerDoc = res.data[0];
+              return {
+                ...prev,
+                doctor: primerDoc.nombre,
+                especialidad: primerDoc.especialidad || prev.especialidad
+              };
+            }
+            return prev;
+          });
+        } else {
+          // Fallback en caso de que no haya aún doctores registrados
+          const docsDefault = [
+            { id: '1', nombre: 'Doctor Amor Amoroso', especialidad: 'Cardiologia' },
+            { id: '2', nombre: 'Dr. Test', especialidad: 'Médico General' },
+            { id: '3', nombre: 'Dr. Diego Leal', especialidad: 'Medicina General' }
+          ];
+          setDoctores(docsDefault);
+          setForm(prev => ({ ...prev, doctor: prev.doctor || docsDefault[0].nombre }));
+        }
+      })
+      .catch(err => {
+        console.error('Error cargando doctores desde API:', err);
+      });
+  }, []);
 
   // Cargar lista de pacientes para agendar directamente seleccionando paciente
   useEffect(() => {
@@ -80,6 +115,17 @@ export default function AgendarCita() {
         correo: p.correo || ''
       }));
     }
+  };
+
+  // Al cambiar doctor, si el doctor tiene especialidad asignada, actualizarla automáticamente
+  const handleDoctorChange = (doctorNombre) => {
+    const docEncontrado = doctores.find(d => d.nombre === doctorNombre);
+    setForm(prev => ({
+      ...prev,
+      doctor: doctorNombre,
+      especialidad: docEncontrado?.especialidad || prev.especialidad
+    }));
+    setErrorEmpalme(null);
   };
 
   const handleSubmit = async (e) => {
@@ -197,6 +243,21 @@ export default function AgendarCita() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                 <div className="form-group">
+                  <label>Médico Asignado</label>
+                  <select
+                    value={form.doctor}
+                    onChange={e => handleDoctorChange(e.target.value)}
+                    required
+                  >
+                    {doctores.map((doc, idx) => (
+                      <option key={`${doc.id || idx}`} value={doc.nombre}>
+                        {doc.nombre} {doc.especialidad ? `(${doc.especialidad})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
                   <label>Especialidad / Servicio</label>
                   <select
                     value={form.especialidad}
@@ -207,18 +268,6 @@ export default function AgendarCita() {
                     <option>Neurología</option>
                     <option>Pediatría</option>
                     <option>Traumatología</option>
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label>Médico Asignado</label>
-                  <select
-                    value={form.doctor}
-                    onChange={e => setForm({ ...form, doctor: e.target.value })}
-                  >
-                    <option>Dr. Diego Leal</option>
-                    <option>Dra. Marcela Santos</option>
-                    <option>Dr. Roberto Garza</option>
                   </select>
                 </div>
               </div>

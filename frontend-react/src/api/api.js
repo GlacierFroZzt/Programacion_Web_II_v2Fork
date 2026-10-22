@@ -32,6 +32,11 @@ export async function obtenerPacientes() {
   return res.json();
 }
 
+export async function obtenerDoctores() {
+  const res = await fetch(`${API_URL}/doctores`);
+  return res.json();
+}
+
 export async function agendarCita(citaData) {
   const res = await fetch(`${API_URL}/citas`, {
     method: 'POST',
