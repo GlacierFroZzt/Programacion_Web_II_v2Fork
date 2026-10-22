@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavTemporal from '../componentes/NavTemporal';
+import { registrarPaciente } from '../api/api';
 import './Registro.css';
 
 export default function PacienteNuevo() {
@@ -25,6 +26,7 @@ export default function PacienteNuevo() {
   const [toast, setToast] = useState({ visible: false, mensaje: '', tipo: '' });
   const [invalido, setInvalido] = useState('');
   const [registrado, setRegistrado] = useState(null);
+  const [cargando, setCargando] = useState(false);
 
   const mostrarToast = (mensaje, tipo = '') => {
     setToast({ visible: true, mensaje, tipo });
@@ -41,7 +43,7 @@ export default function PacienteNuevo() {
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!form.nombre.trim() || !form.apellidoP.trim() || !form.fechaNacimiento || !form.sexo || !form.telefono.trim()) {
@@ -71,21 +73,49 @@ export default function PacienteNuevo() {
       return;
     }
 
-    const pacientesPrevios = JSON.parse(sessionStorage.getItem('mv_pacientes') || '[]');
-    const expediente = 'EXP-' + String(pacientesPrevios.length + 1).padStart(6, '0');
+    try {
+      setCargando(true);
+      const res = await registrarPaciente(form);
 
-    const nuevoPaciente = {
-      expediente,
-      ...form,
-      estado: 'Activo',
-      ultimaVisita: new Date().toISOString().split('T')[0]
-    };
+      if (res && res.success) {
+        const expedienteGenerado = res.data?.expediente || 'EXP-000001';
 
-    pacientesPrevios.push(nuevoPaciente);
-    sessionStorage.setItem('mv_pacientes', JSON.stringify(pacientesPrevios));
+        // Sincronizar en sessionStorage para mantener la reactividad con Dashboard y Consulta
+        const pacientesPrevios = JSON.parse(sessionStorage.getItem('mv_pacientes') || '[]');
+        const nuevoPaciente = {
+          _id: res.data?.id,
+          expediente: expedienteGenerado,
+          ...form,
+          estado: 'Activo',
+          ultimaVisita: new Date().toISOString().split('T')[0]
+        };
+        pacientesPrevios.push(nuevoPaciente);
+        sessionStorage.setItem('mv_pacientes', JSON.stringify(pacientesPrevios));
 
-    setRegistrado(expediente);
-    mostrarToast('Paciente registrado correctamente.');
+        setRegistrado(expedienteGenerado);
+        mostrarToast('¡Paciente registrado exitosamente en MongoDB!');
+      } else {
+        mostrarToast(res?.message || 'Error al guardar en MongoDB', 'error');
+      }
+    } catch (err) {
+      console.error('Error registrando paciente:', err);
+      // Fallback local si backend no está disponible
+      const pacientesPrevios = JSON.parse(sessionStorage.getItem('mv_pacientes') || '[]');
+      const expediente = 'EXP-' + String(pacientesPrevios.length + 1).padStart(6, '0');
+      const nuevoPaciente = {
+        expediente,
+        ...form,
+        estado: 'Activo',
+        ultimaVisita: new Date().toISOString().split('T')[0]
+      };
+      pacientesPrevios.push(nuevoPaciente);
+      sessionStorage.setItem('mv_pacientes', JSON.stringify(pacientesPrevios));
+
+      setRegistrado(expediente);
+      mostrarToast('Guardado de respaldo local (error backend: ' + err.message + ')', 'error');
+    } finally {
+      setCargando(false);
+    }
   };
 
   return (
@@ -285,8 +315,8 @@ export default function PacienteNuevo() {
               </div>
 
               <div className="full-width" style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
-                <button type="submit" className="Btn_Login" style={{ flex: 1 }}>
-                  💾 Guardar Paciente
+                <button type="submit" className="Btn_Login" style={{ flex: 1 }} disabled={cargando}>
+                  {cargando ? '⏳ Guardando en BD...' : ' Guardar Paciente'}
                 </button>
                 <button
                   type="button"
@@ -300,7 +330,7 @@ export default function PacienteNuevo() {
             </form>
           ) : (
             <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🎉</div>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}></div>
               <h2 style={{ fontSize: '1.5rem', marginBottom: '0.8rem', color: 'var(--text-main)' }}>
                 Paciente Registrado con Éxito
               </h2>
@@ -315,7 +345,7 @@ export default function PacienteNuevo() {
                   style={{ padding: '0.75rem 2rem' }}
                   onClick={() => navigate('/consulta/1')}
                 >
-                  🩺 Iniciar Consulta Médica
+                   Iniciar Consulta Médica
                 </button>
                 <button
                   type="button"

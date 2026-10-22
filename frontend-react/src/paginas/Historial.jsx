@@ -111,7 +111,7 @@ export default function Historial() {
               style={{ width: '100%', marginBottom: '0.6rem' }}
               onClick={() => navigate('/consulta/1')}
             >
-              🩺 Iniciar Nueva Consulta
+               Iniciar Nueva Consulta
             </button>
 
             <button
@@ -120,7 +120,7 @@ export default function Historial() {
               style={{ width: '100%' }}
               onClick={() => mostrarToast('Modo edición en desarrollo')}
             >
-              ✏️ Editar Expediente
+               Editar Expediente
             </button>
           </aside>
 
@@ -129,7 +129,7 @@ export default function Historial() {
             {/* Signos Vitales Última Consulta */}
             <div className="clinical-card" style={{ marginBottom: '1.5rem' }}>
               <div className="card-title">
-                <span className="icon">💓</span>
+                <span className="icon"></span>
                 <span>Signos Vitales (Última Consulta Registrada)</span>
               </div>
 
@@ -158,7 +158,7 @@ export default function Historial() {
               {/* Línea de tiempo de consultas */}
               <div className="clinical-card">
                 <div className="card-title">
-                  <span className="icon">📅</span>
+                  <span className="icon"></span>
                   <span>Historial Cronológico de Consultas</span>
                 </div>
 
@@ -205,7 +205,7 @@ export default function Historial() {
               <div className="stack">
                 <div className="clinical-card">
                   <div className="card-title" style={{ fontSize: '1.05rem', marginBottom: '0.8rem' }}>
-                    <span className="icon">🩺</span>
+                    <span className="icon"></span>
                     <span>Diagnósticos Activos</span>
                   </div>
                   <div className="tag-list">
@@ -216,7 +216,7 @@ export default function Historial() {
 
                 <div className="clinical-card">
                   <div className="card-title" style={{ fontSize: '1.05rem', marginBottom: '0.8rem' }}>
-                    <span className="icon">💊</span>
+                    <span className="icon"></span>
                     <span>Medicamentos Vigentes</span>
                   </div>
                   <div className="tag-list">
@@ -227,7 +227,7 @@ export default function Historial() {
 
                 <div className="clinical-card">
                   <div className="card-title" style={{ fontSize: '1.05rem', marginBottom: '0.8rem' }}>
-                    <span className="icon">⚠️</span>
+                    <span className="icon"></span>
                     <span>Alergias Documentadas</span>
                   </div>
                   <div className="tag-list">
@@ -238,7 +238,7 @@ export default function Historial() {
 
                 <div className="clinical-card">
                   <div className="card-title" style={{ fontSize: '1.05rem', marginBottom: '0.8rem' }}>
-                    <span className="icon">📎</span>
+                    <span className="icon"></span>
                     <span>Estudios y Archivos</span>
                   </div>
 

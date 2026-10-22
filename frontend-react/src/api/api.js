@@ -17,3 +17,17 @@ export async function registrarDoctor(doctorData) {
   });
   return res.json();
 }
+
+export async function registrarPaciente(pacienteData) {
+  const res = await fetch(`${API_URL}/paciente/registrar`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(pacienteData),
+  });
+  return res.json();
+}
+
+export async function obtenerPacientes() {
+  const res = await fetch(`${API_URL}/pacientes`);
+  return res.json();
+}

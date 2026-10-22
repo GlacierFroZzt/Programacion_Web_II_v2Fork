@@ -16,7 +16,7 @@ const rutas = [
 export default function NavTemporal() {
   return (
     <nav className="temp-nav no-print">
-      <strong>⚡ Atajos:</strong>
+      <strong> Atajos:</strong>
       {rutas.map(r => (
         <span key={r.to}>
           <Link to={r.to}>{r.texto}</Link>

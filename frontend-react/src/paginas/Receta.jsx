@@ -72,7 +72,7 @@ export default function Receta() {
             className="btn-primary"
             onClick={guardarCambios}
           >
-            💾 Guardar Cambios
+             Guardar Cambios
           </button>
 
           <button
@@ -81,7 +81,7 @@ export default function Receta() {
             style={{ backgroundColor: 'var(--primary-light)', color: 'var(--primary-hover)', borderColor: 'var(--primary)' }}
             onClick={() => window.print()}
           >
-            🖨️ Imprimir / Guardar como PDF
+             Imprimir / Guardar como PDF
           </button>
 
           <button
@@ -234,7 +234,7 @@ export default function Receta() {
           </div>
 
           <div className="receta-aviso no-print">
-            💡 <strong>Nota interactiva:</strong> Puedes hacer clic sobre cualquier campo para editar el texto directamente antes de imprimir o descargar en PDF.
+             <strong>Nota interactiva:</strong> Puedes hacer clic sobre cualquier campo para editar el texto directamente antes de imprimir o descargar en PDF.
           </div>
         </div>
       </div>

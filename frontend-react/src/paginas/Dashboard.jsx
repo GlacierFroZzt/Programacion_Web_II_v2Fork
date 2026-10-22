@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import NavTemporal from '../componentes/NavTemporal';
+import { obtenerPacientes } from '../api/api';
 import HeaderClinico from '../componentes/HeaderClinico';
 import doctorAvatar from '../assets/doctor-avatar.jpg';
 import '../App.css';
@@ -9,45 +10,44 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   const [pacientes, setPacientes] = useState(() => {
-    return JSON.parse(sessionStorage.getItem('mv_pacientes') || 'null') || [
-      {
-        expediente: 'EXP-000001',
-        nombre: 'Carlos Gómez Ruiz',
-        edad: '36',
-        telefono: '+52 81 1234 5678',
-        estado: 'Activo',
-        ultimaVisita: '2026-10-21',
-        sexo: 'Masculino'
-      },
-      {
-        expediente: 'EXP-000002',
-        nombre: 'María López Pérez',
-        edad: '29',
-        telefono: '+52 81 8765 4321',
-        estado: 'En tratamiento',
-        ultimaVisita: '2026-10-18',
-        sexo: 'Femenino'
-      },
-      {
-        expediente: 'EXP-000003',
-        nombre: 'Roberto Fernández Morales',
-        edad: '52',
-        telefono: '+52 81 4567 8901',
-        estado: 'Activo',
-        ultimaVisita: '2026-10-15',
-        sexo: 'Masculino'
-      },
-      {
-        expediente: 'EXP-000004',
-        nombre: 'Lucía Méndez Castro',
-        edad: '14',
-        telefono: '+52 81 9876 5432',
-        estado: 'Inactivo',
-        ultimaVisita: '2026-08-10',
-        sexo: 'Femenino'
-      }
-    ];
+    return JSON.parse(sessionStorage.getItem('mv_pacientes') || '[]');
   });
+
+  // Cargar lista única de pacientes desde la BD en MongoDB
+  useEffect(() => {
+    let activo = true;
+    obtenerPacientes()
+      .then(res => {
+        if (activo && res && res.success && Array.isArray(res.data) && res.data.length > 0) {
+          const map = new Map();
+          res.data.forEach(p => {
+            if (p.expediente && !map.has(p.expediente)) {
+              const nombreCompleto = p.nombreCompleto || `${p.nombre || ''} ${p.apellidoP || ''} ${p.apellidoM || ''}`.trim();
+              let calcEdad = p.edad || '—';
+              if (calcEdad === '—' && p.fechaNacimiento) {
+                const nac = new Date(p.fechaNacimiento);
+                const hoy = new Date();
+                calcEdad = String(hoy.getFullYear() - nac.getFullYear());
+              }
+              map.set(p.expediente, {
+                expediente: p.expediente,
+                nombre: nombreCompleto,
+                edad: calcEdad,
+                telefono: p.telefono || '—',
+                estado: p.estado || 'Activo',
+                ultimaVisita: p.ultimaVisita || (p.fechaRegistro ? new Date(p.fechaRegistro).toISOString().split('T')[0] : '—'),
+                sexo: p.sexo || 'Otro'
+              });
+            }
+          });
+          const lista = Array.from(map.values());
+          setPacientes(lista);
+          sessionStorage.setItem('mv_pacientes', JSON.stringify(lista));
+        }
+      })
+      .catch(err => console.error('Error cargando pacientes:', err));
+    return () => { activo = false; };
+  }, []);
 
   const [busqueda, setBusqueda] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('Todos');
@@ -58,9 +58,9 @@ export default function Dashboard() {
   // Filtrado reactivo de pacientes
   const pacientesFiltrados = pacientes.filter(p => {
     const matchTexto =
-      p.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-      p.expediente.toLowerCase().includes(busqueda.toLowerCase()) ||
-      p.telefono.includes(busqueda);
+      (p.nombre || '').toLowerCase().includes(busqueda.toLowerCase()) ||
+      (p.expediente || '').toLowerCase().includes(busqueda.toLowerCase()) ||
+      (p.telefono || '').includes(busqueda);
 
     const matchEstado = filtroEstado === 'Todos' || p.estado === filtroEstado;
     const matchSexo = filtroSexo === 'Todos' || p.sexo === filtroSexo;
@@ -142,7 +142,7 @@ export default function Dashboard() {
               style={{ width: '100%', marginBottom: '0.6rem' }}
               onClick={() => navigate('/consulta/1')}
             >
-              🩺 Abrir Consulta con Voz
+               Abrir Consulta con Voz
             </button>
 
             <button
@@ -151,7 +151,7 @@ export default function Dashboard() {
               style={{ width: '100%' }}
               onClick={() => navigate('/paciente/nuevo')}
             >
-              ➕ Registrar Nuevo Paciente
+               Registrar Nuevo Paciente
             </button>
           </aside>
 
@@ -160,7 +160,7 @@ export default function Dashboard() {
             {/* Buscador y Filtros */}
             <div className="clinical-card search-card">
               <div className="card-title">
-                <span className="icon">🔍</span>
+                <span className="icon"></span>
                 <span>Directorio y Búsqueda de Pacientes</span>
               </div>
 
@@ -209,7 +209,7 @@ export default function Dashboard() {
             <div className="clinical-card records-section" style={{ marginTop: 0 }}>
               <div className="records-header">
                 <div className="card-title" style={{ margin: 0 }}>
-                  <span className="icon">👥</span>
+                  <span className="icon"></span>
                   <span>Pacientes Encontrados</span>
                 </div>
                 <div className="table-badge">{pacientesFiltrados.length}</div>
@@ -230,7 +230,7 @@ export default function Dashboard() {
                   </thead>
                   <tbody>
                     {pacientesFiltrados.map((p, idx) => (
-                      <tr key={p.expediente || idx}>
+                      <tr key={`${p.expediente || 'p'}-${idx}`}>
                         <td><strong>{p.expediente}</strong></td>
                         <td>{p.nombre}</td>
                         <td>{p.edad} años</td>

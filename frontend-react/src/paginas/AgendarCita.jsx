@@ -31,7 +31,7 @@ export default function AgendarCita() {
       <div className="auth-container">
         <div className="auth-card" style={{ maxWidth: '540px' }}>
           <div className="auth-header">
-            <div className="auth-logo-badge">🗓️</div>
+            <div className="auth-logo-badge"></div>
             <h1>Agendar Cita Médica</h1>
             <p>Programa tu atención presencial o remota</p>
           </div>
@@ -120,7 +120,7 @@ export default function AgendarCita() {
             </form>
           ) : (
             <div style={{ textAlign: 'center', padding: '1rem 0' }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>✅</div>
+              <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}></div>
               <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>¡Cita Solicitada con Éxito!</h3>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem', lineHeight: 1.6 }}>
                 Hemos registrado tu solicitud para el <strong>{form.fecha}</strong> a las <strong>{form.hora}</strong>. Te contactaremos al {form.telefono} para confirmar.

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavTemporal from '../componentes/NavTemporal';
+import { obtenerPacientes } from '../api/api';
 import HeaderClinico from '../componentes/HeaderClinico';
 import doctorAvatar from '../assets/doctor-avatar.jpg';
 import '../App.css';
@@ -39,11 +40,35 @@ export default function Consulta() {
 
   // Estados del formulario y listas
   const [pacientes, setPacientes] = useState(() => {
-    return JSON.parse(sessionStorage.getItem('mv_pacientes') || 'null') || [
-      { expediente: 'EXP-000001', nombre: 'Carlos', apellidoP: 'Gómez', apellidoM: 'Ruiz', estado: 'Activo' },
-      { expediente: 'EXP-000002', nombre: 'María', apellidoP: 'López', apellidoM: 'Pérez', estado: 'Activo' },
-    ];
+    return JSON.parse(sessionStorage.getItem('mv_pacientes') || '[]');
   });
+
+  // Cargar lista fresca y única de pacientes desde la BD
+  useEffect(() => {
+    let activo = true;
+    obtenerPacientes()
+      .then(res => {
+        if (activo && res && res.success && Array.isArray(res.data) && res.data.length > 0) {
+          const map = new Map();
+          res.data.forEach(p => {
+            if (p.expediente && !map.has(p.expediente)) {
+              map.set(p.expediente, {
+                expediente: p.expediente,
+                nombre: p.nombre,
+                apellidoP: p.apellidoP || '',
+                apellidoM: p.apellidoM || '',
+                estado: p.estado || 'Activo'
+              });
+            }
+          });
+          const lista = Array.from(map.values());
+          setPacientes(lista);
+          sessionStorage.setItem('mv_pacientes', JSON.stringify(lista));
+        }
+      })
+      .catch(err => console.error('Error cargando pacientes:', err));
+    return () => { activo = false; };
+  }, []);
 
   const [registros, setRegistros] = useState(() => {
     return JSON.parse(sessionStorage.getItem('mv_registros') || '[]');
@@ -303,7 +328,7 @@ export default function Consulta() {
               {/* Tarjeta 1: Formulario clínico */}
               <div className="clinical-card">
                 <div className="card-title">
-                  <span className="icon">📋</span>
+                  <span className="icon"></span>
                   <span>Nuevo Registro de Consulta</span>
                 </div>
 
@@ -318,8 +343,8 @@ export default function Consulta() {
                   className={campoInvalido === 'paciente' ? 'campo-invalido' : ''}
                 >
                   <option value="">Selecciona un paciente...</option>
-                  {pacientes.map(p => (
-                    <option key={p.expediente} value={p.expediente}>
+                  {pacientes.map((p, idx) => (
+                    <option key={`${p.expediente}-${idx}`} value={p.expediente}>
                       {p.expediente} · {p.nombre} {p.apellidoP}
                     </option>
                   ))}
@@ -494,7 +519,7 @@ export default function Consulta() {
                   {diagnosticos.map((d, i) => (
                     <span key={i} className="tag tag-accent">
                       {d}
-                      <span className="tag-remove" onClick={() => quitarDiagnostico(i)}>✕</span>
+                      <span className="tag-remove" onClick={() => quitarDiagnostico(i)}></span>
                     </span>
                   ))}
                   {!diagnosticos.length && (
@@ -536,7 +561,7 @@ export default function Consulta() {
                   {medicamentos.map((m, i) => (
                     <span key={i} className="tag">
                       {m.nombre} {m.dosis ? `· ${m.dosis}` : ''}
-                      <span className="tag-remove" onClick={() => quitarMedicamento(i)}>✕</span>
+                      <span className="tag-remove" onClick={() => quitarMedicamento(i)}></span>
                     </span>
                   ))}
                   {!medicamentos.length && (
@@ -565,7 +590,7 @@ export default function Consulta() {
                     alergias.map((a, i) => (
                       <span key={i} className="tag tag-danger">
                         {a}
-                        <span className="tag-remove" onClick={() => quitarAlergia(i)}>✕</span>
+                        <span className="tag-remove" onClick={() => quitarAlergia(i)}></span>
                       </span>
                     ))
                   )}
@@ -606,7 +631,7 @@ export default function Consulta() {
                         style={{ padding: '0.2rem 0.6rem', fontSize: '0.75rem' }}
                         onClick={() => setArchivos(prev => prev.filter((_, idx) => idx !== i))}
                       >
-                        ✕
+                        
                       </button>
                     </div>
                   ))}
@@ -618,14 +643,14 @@ export default function Consulta() {
                   style={{ width: '100%', padding: '0.9rem' }}
                   onClick={guardarRegistro}
                 >
-                  💾 Guardar Registro de Consulta
+                   Guardar Registro de Consulta
                 </button>
               </div>
 
               {/* Tarjeta 2: Asistente de Voz / Dictado */}
               <div className="clinical-card">
                 <div className="card-title">
-                  <span className="icon">🎙️</span>
+                  <span className="icon"></span>
                   <span>Control de Dictado Clínico</span>
                 </div>
 
@@ -656,7 +681,7 @@ export default function Consulta() {
                     className={`mic-btn ${escuchando ? 'mic-active' : ''}`}
                     onClick={toggleMic}
                   >
-                    🎙️
+                    
                   </button>
                   <div className="mic-status">
                     {escuchando ? 'Escuchando activamente...' : 'Listo para dictar'}
@@ -674,7 +699,7 @@ export default function Consulta() {
                 </div>
 
                 <div className="dictation-tips">
-                  <div className="dictation-tips-title">💡 Consejos para dictar</div>
+                  <div className="dictation-tips-title"> Consejos para dictar</div>
                   <ul>
                     <li>Habla claro y a velocidad constante.</li>
                     <li>Di "punto" para signos de puntuación o "nueva línea" para saltar reglón.</li>
@@ -689,7 +714,7 @@ export default function Consulta() {
             <div className="clinical-card records-section">
               <div className="records-header">
                 <div className="card-title" style={{ margin: 0 }}>
-                  <span className="icon">📂</span>
+                  <span className="icon"></span>
                   <span>Registros Clínicos Guardados</span>
                 </div>
                 <div className="table-badge">{registros.length}</div>
@@ -792,7 +817,7 @@ export default function Consulta() {
               style={{ width: '100%', marginBottom: '0.6rem' }}
               onClick={() => navigate('/dashboard')}
             >
-              👤 Mi Perfil y Búsqueda
+               Mi Perfil y Búsqueda
             </button>
 
             <button
@@ -801,7 +826,7 @@ export default function Consulta() {
               style={{ width: '100%' }}
               onClick={() => navigate('/login')}
             >
-              🚪 Cerrar Sesión
+               Cerrar Sesión
             </button>
           </aside>
         </div>

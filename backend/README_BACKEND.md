@@ -1,6 +1,6 @@
 # MediVoz Backend - Node.js + MongoDB
 
-## 📋 Requisitos
+##  Requisitos
 
 - **Node.js** (v14+) instalado
 - **MongoDB Atlas** con acceso configurado (ya tienes)
@@ -8,7 +8,7 @@
 
 ---
 
-## 🚀 Instalación y Ejecución
+##  Instalación y Ejecución
 
 ### Paso 1: Descarga los archivos
 
@@ -21,10 +21,10 @@ Descarga estos 4 archivos en una carpeta llamada `medivoz-backend`:
 Estructura:
 ```
 medivoz-backend/
-├── app.js
-├── package.json
-├── .env
-└── README_BACKEND.md
+ app.js
+ package.json
+ .env
+ README_BACKEND.md
 ```
 
 ### Paso 2: Instala las dependencias
@@ -45,16 +45,16 @@ npm start
 
 Deberías ver:
 ```
-✅ Conectado a MongoDB Atlas
-🚀 Servidor corriendo en http://localhost:3000
-📊 Base de datos: medivoz
+ Conectado a MongoDB Atlas
+ Servidor corriendo en http://localhost:3000
+ Base de datos: medivoz
 ```
 
 **¡Éxito!** El backend está conectado a tu MongoDB.
 
 ---
 
-## 📡 Endpoints disponibles
+##  Endpoints disponibles
 
 ### 1. **POST /api/login**
 Inicia sesión con usuario y contraseña.
@@ -242,13 +242,13 @@ Prueba si el servidor está funcionando.
 ```json
 {
   "success": true,
-  "message": "✅ Servidor funcionando correctamente"
+  "message": " Servidor funcionando correctamente"
 }
 ```
 
 ---
 
-## 🔗 Conectar tu Frontend
+##  Conectar tu Frontend
 
 Tu archivo `Index_ACTUALIZADO.html` ya está configurado para comunicarse con el backend.
 
@@ -262,7 +262,7 @@ Tu archivo `Index_ACTUALIZADO.html` ya está configurado para comunicarse con el
 
 ---
 
-## 🗄️ Estructura de la colección `usuarios` en MongoDB
+##  Estructura de la colección `usuarios` en MongoDB
 
 Tu colección debería verse así:
 
@@ -272,7 +272,7 @@ Tu colección debería verse así:
   nombre: "Dr. Carlos López",
   usuario: "carlos123",
   email: "carlos@ejemplo.com",
-  password: "Password123!",  // ⚠️ Encriptar en producción
+  password: "Password123!",  //  Encriptar en producción
   especialidad: "Médico General",
   fechaRegistro: ISODate("2024-01-01")
 }
@@ -280,7 +280,7 @@ Tu colección debería verse así:
 
 ---
 
-## ⚠️ Notas de Seguridad
+##  Notas de Seguridad
 
 1. **NO compartas el archivo `.env`** en GitHub o espacios públicos
 2. **NO uses contraseñas en texto plano** en producción (usa bcrypt)
@@ -295,7 +295,7 @@ node_modules/
 
 ---
 
-## 🐛 Solución de problemas
+##  Solución de problemas
 
 ### "Error: conectando a MongoDB"
 - Verifica que la URL en `.env` sea correcta
@@ -313,17 +313,17 @@ node_modules/
 
 ---
 
-## 📝 Próximos pasos
+##  Próximos pasos
 
-1. ✅ Crear endpoint de login (ya hecho)
-2. 🔄 Crear endpoint para guardar pacientes
-3. 🔄 Crear endpoint para obtener pacientes
-4. 🔄 Encriptar contraseñas con bcrypt
-5. 🔄 Agregar autenticación JWT
+1.  Crear endpoint de login (ya hecho)
+2.  Crear endpoint para guardar pacientes
+3.  Crear endpoint para obtener pacientes
+4.  Encriptar contraseñas con bcrypt
+5.  Agregar autenticación JWT
 
 ---
 
-## ✅ Verificar conexión
+##  Verificar conexión
 
 Abre tu navegador y ve a:
 ```
@@ -332,8 +332,8 @@ http://localhost:3000/api/test
 
 Si ves:
 ```json
-{"success":true,"message":"✅ Servidor funcionando correctamente"}
+{"success":true,"message":" Servidor funcionando correctamente"}
 ```
 
-**¡Todo está conectado! ✅**
+**¡Todo está conectado! **
 
