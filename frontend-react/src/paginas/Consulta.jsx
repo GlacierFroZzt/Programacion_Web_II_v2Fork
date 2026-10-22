@@ -188,73 +188,144 @@ export default function Consulta() {
     }
   };
 
-  // Control de voz / Web Speech API
-  const toggleMic = () => {
+  // Control de voz / Web Speech API (Compatible con Chrome, Edge y soporte con advertencia para Brave)
+  const [micError, setMicError] = useState('');
+  const [isBrave, setIsBrave] = useState(false);
+
+  useEffect(() => {
+    // Detectar si el usuario está en Brave
+    if (navigator.brave && typeof navigator.brave.isBrave === 'function') {
+      navigator.brave.isBrave().then(brave => setIsBrave(brave)).catch(() => {});
+    }
+  }, []);
+
+  const detenerMic = () => {
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.onresult = null;
+        recognitionRef.current.onerror = null;
+        recognitionRef.current.onend = null;
+        recognitionRef.current.stop();
+      } catch (e) {
+        // Ignorar si ya estaba detenido
+      }
+      recognitionRef.current = null;
+    }
+    setEscuchando(false);
+  };
+
+  const toggleMic = async () => {
+    setMicError('');
+    if (escuchando) {
+      detenerMic();
+      mostrarToast('Micrófono detenido.');
+      return;
+    }
+
+    // Comprobar soporte de Web Speech API
     const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognitionAPI) {
-      mostrarToast('Tu navegador no soporta reconocimiento de voz. Usa Chrome o Edge.', 'error');
+      const msg = 'Tu navegador no soporta SpeechRecognition nativo. Usa Google Chrome o Microsoft Edge.';
+      setMicError(msg);
+      mostrarToast(msg, 'error');
       return;
     }
 
-    if (escuchando) {
-      if (recognitionRef.current) recognitionRef.current.stop();
-      setEscuchando(false);
+    // Solicitar permiso explícito de micrófono primero para evitar errores silenciosos en Edge/Brave
+    try {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        // Liberar el stream inmediatamente (solo queríamos asegurar el permiso del hardware)
+        stream.getTracks().forEach(track => track.stop());
+      }
+    } catch (permErr) {
+      console.warn('Permiso de micrófono denegado:', permErr);
+      const msg = 'Permiso de micrófono denegado o bloqueado en el navegador. Por favor habilítalo en la barra de direcciones.';
+      setMicError(msg);
+      mostrarToast(msg, 'error');
       return;
     }
 
-    const rec = new SpeechRecognitionAPI();
-    rec.lang = 'es-MX';
-    rec.continuous = true;
-    rec.interimResults = true;
+    try {
+      const rec = new SpeechRecognitionAPI();
+      rec.lang = 'es-MX';
+      rec.continuous = true;
+      rec.interimResults = true;
+      rec.maxAlternatives = 1;
 
-    rec.onresult = (event) => {
-      let finalTranscript = '';
-      let interimTranscript = '';
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const item = event.results[i];
-        if (item.isFinal) {
-          finalTranscript += formatearDictado(item[0].transcript) + ' ';
-        } else {
-          interimTranscript += item[0].transcript;
+      rec.onstart = () => {
+        setEscuchando(true);
+        setMicError('');
+        mostrarToast('🎤 Micrófono activo. Comienza a dictar...');
+      };
+
+      rec.onresult = (event) => {
+        let finalTranscript = '';
+        let interimTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const item = event.results[i];
+          if (item.isFinal) {
+            finalTranscript += formatearDictado(item[0].transcript) + ' ';
+          } else {
+            interimTranscript += item[0].transcript;
+          }
         }
-      }
 
-      setLiveText(finalTranscript || interimTranscript);
+        const textoCompleto = (finalTranscript || interimTranscript).trim();
+        setLiveText(textoCompleto);
 
-      if (finalTranscript.trim()) {
-        const texto = finalTranscript.trim();
-        setForm(prev => {
-          if (campoActivo === 'sintomas') {
-            return { ...prev, sintomas: prev.sintomas ? `${prev.sintomas} ${texto}` : texto };
-          }
-          if (campoActivo === 'notas') {
-            return { ...prev, notas: prev.notas ? `${prev.notas} ${texto}` : texto };
-          }
-          if (['presion', 'frecuencia', 'temperatura', 'peso', 'fecha', 'hora', 'tipoConsulta', 'categoria', 'severidad'].includes(campoActivo)) {
-            return { ...prev, [campoActivo]: texto };
-          }
-          return prev;
-        });
+        if (finalTranscript.trim()) {
+          const texto = finalTranscript.trim();
+          setForm(prev => {
+            if (campoActivo === 'sintomas') {
+              return { ...prev, sintomas: prev.sintomas ? (prev.sintomas + ' ' + texto) : texto };
+            }
+            if (campoActivo === 'notas') {
+              return { ...prev, notas: prev.notas ? (prev.notas + ' ' + texto) : texto };
+            }
+            if (['presion', 'frecuencia', 'temperatura', 'peso', 'fecha', 'hora', 'tipoConsulta', 'categoria', 'severidad'].includes(campoActivo)) {
+              return { ...prev, [campoActivo]: texto };
+            }
+            return prev;
+          });
 
-        if (campoActivo === 'diagnostico') setNuevoDiagnostico(texto);
-        if (campoActivo === 'medicamento') setMedNombre(texto);
-        if (campoActivo === 'dosis') setMedDosis(texto);
-        if (campoActivo === 'alergia') setNuevaAlergia(texto);
-      }
-    };
+          if (campoActivo === 'diagnostico') setNuevoDiagnostico(prev => prev ? (prev + ' ' + texto) : texto);
+          if (campoActivo === 'medicamento') setMedNombre(texto);
+          if (campoActivo === 'dosis') setMedDosis(texto);
+          if (campoActivo === 'alergia') setNuevaAlergia(texto);
+        }
+      };
 
-    rec.onerror = (err) => {
-      console.warn('Speech recognition error:', err);
+      rec.onerror = (err) => {
+        console.warn('Speech recognition error event:', err.error, err);
+        setEscuchando(false);
+
+        if (err.error === 'network') {
+          const errorMsg = 'Error de red en el reconocimiento de voz. En Brave esto se debe a que Brave bloquea el envío de audio a los servidores de Google Speech por privacidad. En Edge asegúrate de tener conexión a internet activa y no tener bloqueador/VPN.';
+          setMicError(errorMsg);
+          mostrarToast('Error de red en el dictado por voz.', 'error');
+        } else if (err.error === 'not-allowed') {
+          const errorMsg = 'Permiso para usar el micrófono bloqueado en este sitio. Revisa la configuración del navegador.';
+          setMicError(errorMsg);
+          mostrarToast('Acceso al micrófono denegado.', 'error');
+        } else if (err.error === 'no-speech') {
+          // No detectó voz en un periodo
+        } else {
+          setMicError('Error de reconocimiento de voz: ' + err.error);
+        }
+      };
+
+      rec.onend = () => {
+        setEscuchando(false);
+      };
+
+      recognitionRef.current = rec;
+      rec.start();
+    } catch (err) {
+      console.error('Error al iniciar SpeechRecognition:', err);
       setEscuchando(false);
-    };
-
-    rec.onend = () => {
-      setEscuchando(false);
-    };
-
-    recognitionRef.current = rec;
-    rec.start();
-    setEscuchando(true);
+      setMicError('No se pudo inicializar el micrófono: ' + (err.message || 'Error desconocido'));
+    }
   };
 
   // Guardar consulta
@@ -676,12 +747,44 @@ export default function Consulta() {
                 </div>
 
                 <div className="mic-zone">
+                  {micError && (
+                    <div style={{
+                      backgroundColor: '#fef2f2',
+                      border: '1px solid #f87171',
+                      borderRadius: 'var(--radius-md)',
+                      padding: '0.65rem 0.85rem',
+                      color: '#991b1b',
+                      fontSize: '0.82rem',
+                      lineHeight: 1.4,
+                      marginBottom: '1rem',
+                      textAlign: 'left'
+                    }}>
+                      <strong>⚠️ Aviso del micrófono:</strong> {micError}
+                    </div>
+                  )}
+
+                  {isBrave && (
+                    <div style={{
+                      backgroundColor: '#fffbeb',
+                      border: '1px solid #fcd34d',
+                      borderRadius: 'var(--radius-md)',
+                      padding: '0.65rem 0.85rem',
+                      color: '#92400e',
+                      fontSize: '0.82rem',
+                      lineHeight: 1.4,
+                      marginBottom: '1rem',
+                      textAlign: 'left'
+                    }}>
+                      <strong>🦁 Aviso sobre Brave Browser:</strong> Brave desactiva deliberadamente los servidores de transcripción de voz de Google por política de privacidad de datos (provocando el error <em>network</em>). Para utilizar dictado por voz se recomienda usar <strong>Google Chrome</strong> o <strong>Microsoft Edge</strong>.
+                    </div>
+                  )}
                   <button
                     type="button"
                     className={`mic-btn ${escuchando ? 'mic-active' : ''}`}
                     onClick={toggleMic}
+                    title={escuchando ? 'Detener dictado' : 'Iniciar dictado por voz'}
                   >
-                    
+                    {escuchando ? '⏹️' : '🎤'}
                   </button>
                   <div className="mic-status">
                     {escuchando ? 'Escuchando activamente...' : 'Listo para dictar'}

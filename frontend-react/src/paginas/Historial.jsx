@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import NavTemporal from '../componentes/NavTemporal';
 import HeaderClinico from '../componentes/HeaderClinico';
+import { obtenerPacientes } from '../api/api';
 import '../App.css';
 
 export default function Historial() {
@@ -9,7 +10,7 @@ export default function Historial() {
   const navigate = useNavigate();
 
   const [paciente, setPaciente] = useState({
-    expediente: id ? `EXP-${String(id).padStart(6, '0')}` : 'EXP-000001',
+    expediente: id ? (id.startsWith('EXP') ? id : `EXP-${String(id).padStart(6, '0')}`) : 'EXP-000001',
     nombre: 'Carlos Gómez Ruiz',
     rol: 'Paciente',
     estado: 'Activo',
@@ -24,6 +25,51 @@ export default function Historial() {
   });
 
   const [toast, setToast] = useState({ visible: false, mensaje: '' });
+
+  useEffect(() => {
+    // Intentar buscar el paciente real en sessionStorage o API
+    const expedientesGuardados = JSON.parse(sessionStorage.getItem('mv_pacientes') || '[]');
+    let encontrado = null;
+    if (id) {
+      const expBuscado = id.startsWith('EXP') ? id : `EXP-${String(id).padStart(6, '0')}`;
+      encontrado = expedientesGuardados.find((p, idx) => p.expediente === expBuscado || String(idx + 1) === String(id));
+    }
+    if (encontrado) {
+      setPaciente(prev => ({
+        ...prev,
+        expediente: encontrado.expediente || prev.expediente,
+        nombre: encontrado.nombre || prev.nombre,
+        telefono: encontrado.telefono || prev.telefono,
+        correo: encontrado.correo || prev.correo,
+        estado: encontrado.estado || prev.estado,
+        edad: encontrado.edad ? `${encontrado.edad} años` : prev.edad,
+        sexo: encontrado.sexo || prev.sexo,
+      }));
+    } else {
+      obtenerPacientes().then(res => {
+        if (res && res.data && Array.isArray(res.data)) {
+          const expBuscado = id.startsWith('EXP') ? id : `EXP-${String(id).padStart(6, '0')}`;
+          const p = res.data.find((item, idx) => item.expediente === expBuscado || String(idx + 1) === String(id));
+          if (p) {
+            setPaciente({
+              expediente: p.expediente,
+              nombre: p.nombreCompleto || `${p.nombre || ''} ${p.apellidoP || ''}`.trim(),
+              rol: 'Paciente',
+              estado: p.estado || 'Activo',
+              fechaNacimiento: p.fechaNacimiento || '—',
+              edad: p.edad ? `${p.edad} años` : '—',
+              sexo: p.sexo || 'Otro',
+              telefono: p.telefono || '—',
+              correo: p.correo || '—',
+              direccion: p.direccion || '—',
+              tipoSangre: p.tipoSangre || '—',
+              contactoEmergencia: p.contactoEmergencia ? `${p.contactoEmergencia.nombre || ''} (${p.contactoEmergencia.parentesco || ''}) ${p.contactoEmergencia.telefono || ''}` : '—',
+            });
+          }
+        }
+      }).catch(err => console.error(err));
+    }
+  }, [id]);
 
   const mostrarToast = (msg) => {
     setToast({ visible: true, mensaje: msg });
@@ -111,7 +157,16 @@ export default function Historial() {
               style={{ width: '100%', marginBottom: '0.6rem' }}
               onClick={() => navigate('/consulta/1')}
             >
-               Iniciar Nueva Consulta
+              🎤 Iniciar Consulta
+            </button>
+
+            <button
+              type="button"
+              className="btn-secondary"
+              style={{ width: '100%', marginBottom: '0.6rem' }}
+              onClick={() => navigate(`/paciente/agendar?expediente=${encodeURIComponent(paciente.expediente)}`)}
+            >
+              📅 Agendar Cita
             </button>
 
             <button
@@ -120,7 +175,7 @@ export default function Historial() {
               style={{ width: '100%' }}
               onClick={() => mostrarToast('Modo edición en desarrollo')}
             >
-               Editar Expediente
+              ✏️ Editar Expediente
             </button>
           </aside>
 
@@ -129,7 +184,7 @@ export default function Historial() {
             {/* Signos Vitales Última Consulta */}
             <div className="clinical-card" style={{ marginBottom: '1.5rem' }}>
               <div className="card-title">
-                <span className="icon"></span>
+                <span className="icon">🩺</span>
                 <span>Signos Vitales (Última Consulta Registrada)</span>
               </div>
 
@@ -158,7 +213,7 @@ export default function Historial() {
               {/* Línea de tiempo de consultas */}
               <div className="clinical-card">
                 <div className="card-title">
-                  <span className="icon"></span>
+                  <span className="icon">🕒</span>
                   <span>Historial Cronológico de Consultas</span>
                 </div>
 
@@ -205,7 +260,7 @@ export default function Historial() {
               <div className="stack">
                 <div className="clinical-card">
                   <div className="card-title" style={{ fontSize: '1.05rem', marginBottom: '0.8rem' }}>
-                    <span className="icon"></span>
+                    <span className="icon">🩺</span>
                     <span>Diagnósticos Activos</span>
                   </div>
                   <div className="tag-list">
@@ -216,7 +271,7 @@ export default function Historial() {
 
                 <div className="clinical-card">
                   <div className="card-title" style={{ fontSize: '1.05rem', marginBottom: '0.8rem' }}>
-                    <span className="icon"></span>
+                    <span className="icon">💊</span>
                     <span>Medicamentos Vigentes</span>
                   </div>
                   <div className="tag-list">
@@ -227,7 +282,7 @@ export default function Historial() {
 
                 <div className="clinical-card">
                   <div className="card-title" style={{ fontSize: '1.05rem', marginBottom: '0.8rem' }}>
-                    <span className="icon"></span>
+                    <span className="icon">⚠️</span>
                     <span>Alergias Documentadas</span>
                   </div>
                   <div className="tag-list">
@@ -238,7 +293,7 @@ export default function Historial() {
 
                 <div className="clinical-card">
                   <div className="card-title" style={{ fontSize: '1.05rem', marginBottom: '0.8rem' }}>
-                    <span className="icon"></span>
+                    <span className="icon">📁</span>
                     <span>Estudios y Archivos</span>
                   </div>
 

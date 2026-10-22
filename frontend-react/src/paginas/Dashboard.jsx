@@ -34,6 +34,7 @@ export default function Dashboard() {
                 nombre: nombreCompleto,
                 edad: calcEdad,
                 telefono: p.telefono || '—',
+                correo: p.correo || '',
                 estado: p.estado || 'Activo',
                 ultimaVisita: p.ultimaVisita || (p.fechaRegistro ? new Date(p.fechaRegistro).toISOString().split('T')[0] : '—'),
                 sexo: p.sexo || 'Otro'
@@ -142,7 +143,16 @@ export default function Dashboard() {
               style={{ width: '100%', marginBottom: '0.6rem' }}
               onClick={() => navigate('/consulta/1')}
             >
-               Abrir Consulta con Voz
+              🎤 Abrir Consulta con Voz
+            </button>
+
+            <button
+              type="button"
+              className="btn-secondary"
+              style={{ width: '100%', marginBottom: '0.6rem' }}
+              onClick={() => navigate('/paciente/agendar')}
+            >
+              📅 Agendar Nueva Cita
             </button>
 
             <button
@@ -151,7 +161,7 @@ export default function Dashboard() {
               style={{ width: '100%' }}
               onClick={() => navigate('/paciente/nuevo')}
             >
-               Registrar Nuevo Paciente
+              ➕ Registrar Nuevo Paciente
             </button>
           </aside>
 
@@ -160,7 +170,7 @@ export default function Dashboard() {
             {/* Buscador y Filtros */}
             <div className="clinical-card search-card">
               <div className="card-title">
-                <span className="icon"></span>
+                <span className="icon">🔍</span>
                 <span>Directorio y Búsqueda de Pacientes</span>
               </div>
 
@@ -209,7 +219,7 @@ export default function Dashboard() {
             <div className="clinical-card records-section" style={{ marginTop: 0 }}>
               <div className="records-header">
                 <div className="card-title" style={{ margin: 0 }}>
-                  <span className="icon"></span>
+                  <span className="icon">📋</span>
                   <span>Pacientes Encontrados</span>
                 </div>
                 <div className="table-badge">{pacientesFiltrados.length}</div>
@@ -225,7 +235,7 @@ export default function Dashboard() {
                       <th>Teléfono</th>
                       <th>Estado</th>
                       <th>Última visita</th>
-                      <th>Acción</th>
+                      <th>Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -242,13 +252,25 @@ export default function Dashboard() {
                         </td>
                         <td>{p.ultimaVisita || '—'}</td>
                         <td>
-                          <button
-                            type="button"
-                            className="btn-ver-receta"
-                            onClick={() => navigate(`/historial/${idx + 1}`)}
-                          >
-                            Ver Historial
-                          </button>
+                          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                            <button
+                              type="button"
+                              className="btn-ver-receta"
+                              style={{ padding: '0.25rem 0.55rem', fontSize: '0.75rem' }}
+                              onClick={() => navigate(`/paciente/agendar?expediente=${encodeURIComponent(p.expediente)}`)}
+                              title="Agendar cita para este paciente"
+                            >
+                              📅 Cita
+                            </button>
+                            <button
+                              type="button"
+                              className="btn-ver-receta"
+                              style={{ padding: '0.25rem 0.55rem', fontSize: '0.75rem' }}
+                              onClick={() => navigate(`/historial/${idx + 1}`)}
+                            >
+                              Historial
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}

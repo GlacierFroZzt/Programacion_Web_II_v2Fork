@@ -31,3 +31,19 @@ export async function obtenerPacientes() {
   const res = await fetch(`${API_URL}/pacientes`);
   return res.json();
 }
+
+export async function agendarCita(citaData) {
+  const res = await fetch(`${API_URL}/citas`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(citaData),
+  });
+  return res.json();
+}
+
+export async function obtenerCitas(params = {}) {
+  const query = new URLSearchParams(params).toString();
+  const url = query ? `${API_URL}/citas?${query}` : `${API_URL}/citas`;
+  const res = await fetch(url);
+  return res.json();
+}

@@ -13,6 +13,7 @@ let db;
 let usersCollection;
 let patientsCollection;
 let consultasCollection;
+let citasCollection;
 // Conectar a MongoDB
 const connectToMongo = async () => {
   try {
@@ -23,6 +24,7 @@ const connectToMongo = async () => {
     usersCollection = db.collection('usuarios');
     patientsCollection = db.collection('pacientes');
     consultasCollection = db.collection('consultas');
+    citasCollection = db.collection('citas');
     return client;
   } catch (error) {
     console.error(' Error conectando a MongoDB:', error);
@@ -337,6 +339,171 @@ app.get('/api/consultas/:pacienteId', async (req, res) => {
 // ENDPOINT: GET /api/test
 // (para verificar que el servidor funciona)
 // =====================================
+
+// =====================================
+// ENDPOINTS: CITAS MÉDICAS
+// =====================================
+
+// Helper para convertir hora HH:mm a minutos desde las 00:00
+function horaAMinutos(horaStr) {
+  if (!horaStr) return 0;
+  const match = horaStr.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+  if (!match) return 0;
+  let horas = parseInt(match[1], 10);
+  const minutos = parseInt(match[2], 10);
+  const meridiano = match[3] ? match[3].toUpperCase() : null;
+  if (meridiano === 'PM' && horas < 12) horas += 12;
+  if (meridiano === 'AM' && horas === 12) horas = 0;
+  return horas * 60 + minutos;
+}
+
+// GET /api/citas - Listar citas (opcionalmente por paciente o fecha)
+app.get('/api/citas', async (req, res) => {
+  try {
+    const { pacienteExpediente, fecha, doctor } = req.query;
+    const filtro = { estado: { $ne: 'Cancelada' } };
+    if (pacienteExpediente) filtro.pacienteExpediente = pacienteExpediente;
+    if (fecha) filtro.fecha = fecha;
+    if (doctor) filtro.doctor = doctor;
+
+    const citas = await citasCollection.find(filtro).sort({ fecha: 1, hora: 1 }).toArray();
+    res.json({
+      success: true,
+      data: citas
+    });
+  } catch (error) {
+    console.error('Error obteniendo citas:', error);
+    res.status(500).json({ success: false, message: 'Error en el servidor al obtener citas' });
+  }
+});
+
+// POST /api/citas - Crear cita verificando traslapes/empalmes
+app.post('/api/citas', async (req, res) => {
+  try {
+    const {
+      pacienteExpediente,
+      nombre,
+      telefono,
+      correo,
+      especialidad,
+      doctor,
+      fecha,
+      hora,
+      motivo,
+      duracionMinutos = 30
+    } = req.body;
+
+    if (!nombre || !fecha || !hora) {
+      return res.status(400).json({
+        success: false,
+        message: 'Nombre, fecha y hora son obligatorios para agendar la cita'
+      });
+    }
+
+    const duracion = parseInt(duracionMinutos, 10) || 30;
+    const inicioNuevo = horaAMinutos(hora);
+    const finNuevo = inicioNuevo + duracion;
+
+    // Buscar citas activas en la misma fecha
+    // Las citas no deben empalmarse ni para el mismo doctor ni para el mismo paciente
+    const filtroSolapamiento = {
+      fecha: fecha,
+      estado: { $ne: 'Cancelada' }
+    };
+
+    const condiciones = [];
+    if (doctor) {
+      condiciones.push({ doctor: doctor });
+    }
+    if (pacienteExpediente) {
+      condiciones.push({ pacienteExpediente: pacienteExpediente });
+    }
+    if (telefono) {
+      condiciones.push({ telefono: telefono.trim() });
+    }
+
+    if (condiciones.length > 0) {
+      filtroSolapamiento.$or = condiciones;
+    }
+
+    const citasMismoDia = await citasCollection.find(filtroSolapamiento).toArray();
+
+    // Validar si existe empalme de horarios: [inicioNuevo, finNuevo) solapa con [inicioExistente, finExistente)
+    // Formula de traslape: max(inicioNuevo, inicioExistente) < min(finNuevo, finExistente)
+    for (const citaExistente of citasMismoDia) {
+      const duracionExistente = citaExistente.duracionMinutos || 30;
+      const inicioExistente = horaAMinutos(citaExistente.hora);
+      const finExistente = inicioExistente + duracionExistente;
+
+      const hayEmpalme = Math.max(inicioNuevo, inicioExistente) < Math.min(finNuevo, finExistente);
+      if (hayEmpalme) {
+        const conflictoCon = (citaExistente.pacienteExpediente && citaExistente.pacienteExpediente === pacienteExpediente)
+          ? 'El paciente ya cuenta con una cita en ese horario (' + citaExistente.hora + ')'
+          : 'Horario no disponible: se empalma con otra cita agendada a las ' + citaExistente.hora + ' (' + (citaExistente.especialidad || 'Cita médica') + ')';
+        
+        return res.status(409).json({
+          success: false,
+          empalme: true,
+          message: conflictoCon,
+          citaConflicto: {
+            hora: citaExistente.hora,
+            duracion: duracionExistente,
+            doctor: citaExistente.doctor,
+            especialidad: citaExistente.especialidad
+          }
+        });
+      }
+    }
+
+    const nuevaCita = {
+      pacienteExpediente: pacienteExpediente || '',
+      nombre: (nombre || '').trim(),
+      telefono: (telefono || '').trim(),
+      correo: (correo || '').trim(),
+      especialidad: especialidad || 'Medicina General',
+      doctor: doctor || 'Dr. Diego Leal',
+      fecha,
+      hora,
+      duracionMinutos: duracion,
+      motivo: (motivo || '').trim(),
+      estado: 'Confirmada',
+      fechaCreacion: new Date()
+    };
+
+    const result = await citasCollection.insertOne(nuevaCita);
+
+    res.status(201).json({
+      success: true,
+      message: 'Cita agendada exitosamente sin empalmes',
+      data: {
+        id: result.insertedId,
+        cita: nuevaCita
+      }
+    });
+  } catch (error) {
+    console.error('Error agendando cita:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error en el servidor al agendar cita'
+    });
+  }
+});
+
+// PATCH /api/citas/:id/cancelar
+app.patch('/api/citas/:id/cancelar', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { ObjectId } = require('mongodb');
+    await citasCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { estado: 'Cancelada', fechaCancelacion: new Date() } }
+    );
+    res.json({ success: true, message: 'Cita cancelada con éxito' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error cancelando cita' });
+  }
+});
+
 app.get('/', (req, res) => {
   res.json({ status: 'online', message: 'MediVoz API activa' });
 });
