@@ -342,10 +342,18 @@ export default function PacienteNuevo() {
                 <button
                   type="button"
                   className="Btn_Login"
-                  style={{ padding: '0.75rem 2rem' }}
+                  style={{ padding: '0.75rem 1.5rem' }}
+                  onClick={() => navigate(`/paciente/agendar?expediente=${encodeURIComponent(registrado)}`)}
+                >
+                  📅 Agendar Cita para este Paciente
+                </button>
+                <button
+                  type="button"
+                  className="Btn_Login"
+                  style={{ padding: '0.75rem 1.5rem' }}
                   onClick={() => navigate('/consulta/1')}
                 >
-                   Iniciar Consulta Médica
+                  🎤 Iniciar Consulta Médica
                 </button>
                 <button
                   type="button"
