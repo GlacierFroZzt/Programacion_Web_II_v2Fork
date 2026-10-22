@@ -188,16 +188,9 @@ export default function Consulta() {
     }
   };
 
-  // Control de voz / Web Speech API (Compatible con Chrome, Edge y soporte con advertencia para Brave)
+  // Control de voz
   const [micError, setMicError] = useState('');
-  const [isBrave, setIsBrave] = useState(false);
 
-  useEffect(() => {
-    // Detectar si el usuario está en Brave
-    if (navigator.brave && typeof navigator.brave.isBrave === 'function') {
-      navigator.brave.isBrave().then(brave => setIsBrave(brave)).catch(() => {});
-    }
-  }, []);
 
   const detenerMic = () => {
     if (recognitionRef.current) {
@@ -231,7 +224,7 @@ export default function Consulta() {
       return;
     }
 
-    // Solicitar permiso explícito de micrófono primero para evitar errores silenciosos en Edge/Brave
+    // Solicitar permiso de microfono
     try {
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -301,7 +294,7 @@ export default function Consulta() {
         setEscuchando(false);
 
         if (err.error === 'network') {
-          const errorMsg = 'Error de red en el reconocimiento de voz. En Brave esto se debe a que Brave bloquea el envío de audio a los servidores de Google Speech por privacidad. En Edge asegúrate de tener conexión a internet activa y no tener bloqueador/VPN.';
+          const errorMsg = 'Error de red en el reconocimiento de voz. Verifica tu conexión a internet o intenta en Google Chrome.';
           setMicError(errorMsg);
           mostrarToast('Error de red en el dictado por voz.', 'error');
         } else if (err.error === 'not-allowed') {
@@ -763,22 +756,7 @@ export default function Consulta() {
                     </div>
                   )}
 
-                  {isBrave && (
-                    <div style={{
-                      backgroundColor: '#fffbeb',
-                      border: '1px solid #fcd34d',
-                      borderRadius: 'var(--radius-md)',
-                      padding: '0.65rem 0.85rem',
-                      color: '#92400e',
-                      fontSize: '0.82rem',
-                      lineHeight: 1.4,
-                      marginBottom: '1rem',
-                      textAlign: 'left'
-                    }}>
-                      <strong>🦁 Aviso sobre Brave Browser:</strong> Brave desactiva deliberadamente los servidores de transcripción de voz de Google por política de privacidad de datos (provocando el error <em>network</em>). Para utilizar dictado por voz se recomienda usar <strong>Google Chrome</strong> o <strong>Microsoft Edge</strong>.
-                    </div>
-                  )}
-                  <button
+                                    <button
                     type="button"
                     className={`mic-btn ${escuchando ? 'mic-active' : ''}`}
                     onClick={toggleMic}
