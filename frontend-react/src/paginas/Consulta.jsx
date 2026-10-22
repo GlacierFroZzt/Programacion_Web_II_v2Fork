@@ -343,7 +343,7 @@ export default function Consulta() {
                   className={campoInvalido === 'paciente' ? 'campo-invalido' : ''}
                 >
                   <option value="">Selecciona un paciente...</option>
-                  {pacientes.map(p => (
+                  {pacientes.map((p, idx) => (
                     <option key={`${p.expediente}-${idx}`} value={p.expediente}>
                       {p.expediente} · {p.nombre} {p.apellidoP}
                     </option>
