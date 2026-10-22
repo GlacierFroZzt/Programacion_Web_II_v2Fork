@@ -251,6 +251,29 @@ app.post('/api/paciente/registrar', async (req, res) => {
 // =====================================
 // ENDPOINT: GET /api/pacientes
 // =====================================
+app.get('/api/doctores', async (req, res) => {
+  try {
+    const doctores = await usersCollection.find({}).toArray();
+    const data = doctores.map(d => {
+      const nombreCompleto = [d.nombre, d.apellidoP, d.apellidoM].filter(Boolean).join(' ').trim() || d.nombre || 'Doctor';
+      return {
+        id: d._id,
+        nombre: nombreCompleto,
+        especialidad: d.especialidad || 'Medicina General',
+        email: d.email || d.correo || '',
+        cedula: d.cedula || ''
+      };
+    });
+    res.json({
+      success: true,
+      data
+    });
+  } catch (error) {
+    console.error('Error obteniendo doctores:', error);
+    res.status(500).json({ success: false, message: 'Error en el servidor' });
+  }
+});
+
 app.get('/api/pacientes', async (req, res) => {
   try {
     const pacientes = await patientsCollection.find({}).toArray();

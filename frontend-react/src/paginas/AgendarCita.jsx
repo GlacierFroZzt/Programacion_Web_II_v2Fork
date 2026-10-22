@@ -3,22 +3,28 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import NavTemporal from '../componentes/NavTemporal';
 import { agendarCita, obtenerPacientes, obtenerDoctores } from '../api/api';
 
+const DOCTORES_RESPALDO = [
+  { id: '1', nombre: 'Doctor Amor Amoroso', especialidad: 'Cardiologia' },
+  { id: '2', nombre: 'Dr. Test', especialidad: 'Médico General' },
+  { id: '3', nombre: 'Dr. Diego Leal', especialidad: 'Medicina General' }
+];
+
 export default function AgendarCita() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Pacientes y doctores cargados dinámicamente desde MongoDB Atlas
+  // Pacientes y doctores cargados dinámicamente desde MongoDB Atlas (con respaldo inmediato para evitar selectores vacíos)
   const [pacientes, setPacientes] = useState([]);
   const [pacienteSeleccionado, setPacienteSeleccionado] = useState('');
-  const [doctores, setDoctores] = useState([]);
+  const [doctores, setDoctores] = useState(DOCTORES_RESPALDO);
 
   const [form, setForm] = useState({
     pacienteExpediente: '',
     nombre: '',
     telefono: '',
     correo: '',
-    especialidad: 'Medicina General',
-    doctor: '',
+    especialidad: DOCTORES_RESPALDO[0].especialidad,
+    doctor: DOCTORES_RESPALDO[0].nombre,
     fecha: '',
     hora: '09:00',
     duracionMinutos: 30,
@@ -29,15 +35,16 @@ export default function AgendarCita() {
   const [cargando, setCargando] = useState(false);
   const [errorEmpalme, setErrorEmpalme] = useState(null);
 
-  // Cargar lista de doctores reales desde MongoDB
+  // Cargar lista de doctores reales desde MongoDB Atlas
   useEffect(() => {
+    let activo = true;
     obtenerDoctores()
       .then(res => {
-        if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
+        if (activo && res && res.success && Array.isArray(res.data) && res.data.length > 0) {
           setDoctores(res.data);
-          // Seleccionar el primer doctor de la BD por defecto si no hay ninguno
           setForm(prev => {
-            if (!prev.doctor) {
+            const docActualValido = res.data.some(d => d.nombre === prev.doctor);
+            if (!docActualValido) {
               const primerDoc = res.data[0];
               return {
                 ...prev,
@@ -47,20 +54,13 @@ export default function AgendarCita() {
             }
             return prev;
           });
-        } else {
-          // Fallback en caso de que no haya aún doctores registrados
-          const docsDefault = [
-            { id: '1', nombre: 'Doctor Amor Amoroso', especialidad: 'Cardiologia' },
-            { id: '2', nombre: 'Dr. Test', especialidad: 'Médico General' },
-            { id: '3', nombre: 'Dr. Diego Leal', especialidad: 'Medicina General' }
-          ];
-          setDoctores(docsDefault);
-          setForm(prev => ({ ...prev, doctor: prev.doctor || docsDefault[0].nombre }));
         }
       })
       .catch(err => {
-        console.error('Error cargando doctores desde API:', err);
+        console.warn('Usando doctores de respaldo ante error de red:', err);
       });
+
+    return () => { activo = false; };
   }, []);
 
   // Cargar lista de pacientes para agendar directamente seleccionando paciente
@@ -132,8 +132,8 @@ export default function AgendarCita() {
     e.preventDefault();
     setErrorEmpalme(null);
 
-    if (!form.nombre || !form.telefono || !form.fecha || !form.hora) {
-      alert('Por favor completa el nombre del paciente, teléfono, fecha y hora.');
+    if (!form.nombre || !form.telefono || !form.fecha || !form.hora || !form.doctor) {
+      alert('Por favor completa el nombre del paciente, teléfono, fecha, hora y médico asignado.');
       return;
     }
 
