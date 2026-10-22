@@ -1,0 +1,279 @@
+/* ======================================================
+   ESTILOS DE REGISTRO MEDIVOZ - Medical Professional UI
+====================================================== */
+
+.registro-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, #f0f7ff 0%, #f8fafc 50%, #e6f4ea 100%);
+  color: var(--text-main);
+  box-sizing: border-box;
+  padding-bottom: 3rem;
+}
+
+/* Header & Logo */
+.container-logo {
+  text-align: center;
+  padding: 2.5rem 1rem 1.5rem;
+}
+
+.logo {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.03em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.logo span {
+  color: var(--primary);
+  background: linear-gradient(135deg, #0284c7 0%, #0d9488 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.subtitle {
+  margin-top: 0.4rem;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+/* Main Container */
+.form-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0 1.25rem;
+  flex: 1;
+}
+
+.Formulario_Registro {
+  width: 100%;
+  max-width: 740px;
+  padding: 2.75rem 2.5rem;
+  background-color: #ffffff;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: var(--shadow-card);
+  transition: var(--transition);
+}
+
+.Formulario_Registro form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem 1.5rem;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.Titulo {
+  margin: 0 0 0.5rem 0;
+  color: #0f172a;
+  text-align: center;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.Titulo::after {
+  content: "";
+  display: block;
+  width: 48px;
+  height: 4px;
+  background: var(--primary);
+  border-radius: var(--radius-full);
+  margin: 0.5rem auto 0;
+}
+
+/* Form Fields */
+.Campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.Campo label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #334155;
+  letter-spacing: 0.01em;
+}
+
+.Text-box {
+  width: 100%;
+  height: 44px;
+  padding: 0 0.875rem;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: #ffffff;
+  color: #0f172a;
+  font-size: 0.925rem;
+  outline: none;
+  transition: var(--transition);
+}
+
+.Text-box::placeholder {
+  color: #94a3b8;
+}
+
+.Text-box:hover {
+  border-color: #cbd5e1;
+}
+
+.Text-box:focus {
+  border-color: var(--primary);
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px var(--primary-focus);
+}
+
+/* Date input custom styling */
+input[type="date"].Text-box {
+  color: #334155;
+}
+
+/* File Upload styling */
+.fileup {
+  display: block;
+  width: 100%;
+  font-size: 0.85rem;
+  color: #475569;
+  padding: 0.4rem 0.5rem;
+  background-color: #f8fafc;
+  border: 1.5px dashed #cbd5e1;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.fileup:hover {
+  border-color: var(--primary);
+  background-color: var(--primary-light);
+}
+
+.fileup::file-selector-button {
+  border: none;
+  background: #0284c7;
+  color: white;
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-right: 0.75rem;
+  transition: var(--transition);
+}
+
+.fileup::file-selector-button:hover {
+  background: var(--primary-hover);
+}
+
+/* Error validation highlight */
+.campo-invalido {
+  border-color: var(--error) !important;
+  background-color: #fffaf0 !important;
+  animation: shake 0.3s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+/* Buttons */
+.Btn_Login {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+  border: none;
+  height: 46px;
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+  transition: var(--transition);
+}
+
+.Btn_Login:hover:not(:disabled) {
+  box-shadow: 0 6px 18px rgba(2, 132, 199, 0.38);
+  transform: translateY(-1px);
+}
+
+.Btn_Login:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.Btn_Registrarse {
+  background-color: #f1f5f9;
+  color: #475569;
+  border: 1px solid var(--border-color);
+  height: 46px;
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.Btn_Registrarse:hover {
+  background-color: #e2e8f0;
+  color: #1e293b;
+  transform: translateY(-1px);
+}
+
+/* Toast Notifications */
+#toast {
+  visibility: hidden;
+  min-width: 280px;
+  max-width: 450px;
+  background-color: #0f172a;
+  color: #ffffff;
+  text-align: center;
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1.25rem;
+  position: fixed;
+  z-index: 9999;
+  left: 50%;
+  bottom: 30px;
+  transform: translateX(-50%) translateY(20px);
+  font-size: 0.9rem;
+  font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+}
+
+#toast.show {
+  visibility: visible;
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+#toast.toast-error {
+  background-color: var(--error);
+  color: #ffffff;
+}
+
+/* Responsive adjustment */
+@media (max-width: 680px) {
+  .Formulario_Registro {
+    padding: 2rem 1.5rem;
+  }
+  
+  .Formulario_Registro form {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .logo {
+    font-size: 2rem;
+  }
+}
