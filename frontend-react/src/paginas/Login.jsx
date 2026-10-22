@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { login } from '../api/api';
 import { useAuth } from '../auth/AuthContext';
+import NavTemporal from '../componentes/NavTemporal';
+
 
 export default function Login() {
   const [usuario, setUsuario] = useState('');
@@ -25,7 +27,9 @@ export default function Login() {
     }
   }
 
-  return (
+return (
+  <>
+    <NavTemporal />
     <form onSubmit={handleSubmit}>
       <h1>Iniciar sesión (médico)</h1>
       <input placeholder="Usuario" value={usuario} onChange={e => setUsuario(e.target.value)} />
@@ -35,5 +39,6 @@ export default function Login() {
       <p>o <Link to="/registro">registrarse</Link></p>
       <p><Link to="/login-paciente">Soy paciente</Link></p>
     </form>
-  );
+  </>
+);
 }

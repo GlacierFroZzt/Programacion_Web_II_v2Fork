@@ -2,6 +2,15 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
 import RutaProtegida from './auth/RutaProtegida';
 import Login from './paginas/Login';
+import LoginPaciente from './paginas/LoginPaciente';
+import Registro from './paginas/Registro';
+import RegistroPaciente from './paginas/RegistroPaciente';
+import Dashboard from './paginas/Dashboard';
+import PacienteNuevo from './paginas/PacienteNuevo';
+import AgendarCita from './paginas/AgendarCita';
+import Consulta from './paginas/Consulta';
+import Historial from './paginas/Historial';
+import Receta from './paginas/Receta';
 
 export default function App() {
   return (
@@ -10,11 +19,19 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/login-paciente" element={<LoginPaciente />} />
+          <Route path="/registro" element={<Registro />} />
+          <Route path="/registro-paciente" element={<RegistroPaciente />} />
           <Route path="/dashboard" element={
             <RutaProtegida rolPermitido="medico">
-              <h1>Dashboard (pendiente)</h1>
+              <Dashboard />
             </RutaProtegida>
           } />
+          <Route path="/paciente/nuevo" element={<PacienteNuevo />} />
+          <Route path="/paciente/agendar" element={<AgendarCita />} />
+          <Route path="/consulta/:id" element={<Consulta />} />
+          <Route path="/historial/:id" element={<Historial />} />
+          <Route path="/receta/:id" element={<Receta />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
