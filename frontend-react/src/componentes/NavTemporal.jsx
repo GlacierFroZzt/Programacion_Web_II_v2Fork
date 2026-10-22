@@ -15,10 +15,10 @@ const rutas = [
 
 export default function NavTemporal() {
   return (
-    <nav style={{ padding: '8px', borderBottom: '1px dashed #888', marginBottom: '12px' }}>
-      <strong>Navegación temporal: </strong>
+    <nav className="temp-nav">
+      <strong>⚡ Atajos:</strong>
       {rutas.map(r => (
-        <span key={r.to} style={{ marginRight: '10px' }}>
+        <span key={r.to}>
           <Link to={r.to}>{r.texto}</Link>
         </span>
       ))}
