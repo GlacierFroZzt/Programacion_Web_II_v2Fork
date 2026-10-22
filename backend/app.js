@@ -337,6 +337,10 @@ app.get('/api/consultas/:pacienteId', async (req, res) => {
 // ENDPOINT: GET /api/test
 // (para verificar que el servidor funciona)
 // =====================================
+app.get('/', (req, res) => {
+  res.json({ status: 'online', message: 'MediVoz API activa' });
+});
+
 app.get('/api/test', (req, res) => {
   res.json({
     success: true,
