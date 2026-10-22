@@ -1,0 +1,203 @@
+/* =========================
+   ESTILOS DE REGISTRO MEDIVOZ
+========================= */
+
+.registro-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(
+    214deg,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(14, 34, 120, 1) 100%
+  );
+  font-family: Arial, Helvetica, sans-serif;
+  color: #222;
+  box-sizing: border-box;
+}
+
+.registro-page * {
+  box-sizing: border-box;
+}
+
+.container-logo {
+  text-align: center;
+  padding: 25px 20px 10px;
+}
+
+.logo {
+  font-size: 36px;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.logo span {
+  color: #4CAF50;
+}
+
+.subtitle {
+  margin-top: 5px;
+  color: #ecf9f5;
+  font-size: 15px;
+}
+
+.form-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  flex: 1;
+}
+
+.Formulario_Registro {
+  width: 100%;
+  max-width: 700px;
+  padding: 35px 40px;
+  background-color: #617a88;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.20);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.Formulario_Registro form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 30px;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.Titulo {
+  margin: 0 0 10px 0;
+  color: #ecf9f5;
+  text-align: center;
+  font-size: 30px;
+}
+
+.Campo {
+  margin-bottom: 0;
+}
+
+.Campo label {
+  display: block;
+  margin-bottom: 7px;
+  color: white;
+  font-size: 15px;
+  font-weight: bold;
+}
+
+.Text-box {
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  border: 2px solid transparent;
+  border-radius: 7px;
+  background-color: white;
+  color: #000000;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 15px;
+  outline: none;
+  transition: 0.2s;
+}
+
+.Text-box::placeholder {
+  color: #666666;
+}
+
+.Text-box:focus {
+  border-color: #0b6599;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.15);
+  color: #000000;
+}
+
+.fileup {
+  width: 100%;
+  height: 42px;
+  padding: 6px 12px;
+  border-radius: 7px;
+  background-color: white;
+  color: #000000;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.Btn_Login, .Btn_Registrarse {
+  width: 100%;
+  height: 43px;
+  margin-top: 5px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 7px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.Btn_Login:hover {
+  background-color: #45a049;
+  transform: translateY(-1px);
+}
+
+.Btn_Login:active {
+  background-color: #3e8e41;
+  transform: translateY(0);
+}
+
+.Btn_Registrarse {
+  background-color: #f44336;
+}
+
+.Btn_Registrarse:hover {
+  background-color: #da190b;
+  transform: translateY(-1px);
+}
+
+.Btn_Registrarse:active {
+  background-color: #b71c1c;
+  transform: translateY(0);
+}
+
+/* Toast */
+#toast {
+  position: fixed;
+  right: 25px;
+  bottom: 25px;
+  padding: 14px 20px;
+  background-color: #617a88;
+  color: white;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+  z-index: 9999;
+  max-width: 400px;
+}
+
+#toast.show {
+  opacity: 1;
+}
+
+#toast.toast-error {
+  background-color: #f44336;
+}
+
+.campo-invalido {
+  outline: 2px solid #f44336 !important;
+  outline-offset: 2px;
+}
+
+@media (max-width: 650px) {
+  .Formulario_Registro form {
+    grid-template-columns: 1fr;
+  }
+}

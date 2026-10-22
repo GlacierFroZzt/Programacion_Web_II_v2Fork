@@ -8,3 +8,12 @@ export async function login(usuario, password) {
   });
   return res.json();
 }
+
+export async function registrarDoctor(doctorData) {
+  const res = await fetch(`${API_URL}/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(doctorData),
+  });
+  return res.json();
+}

@@ -92,36 +92,63 @@ app.post('/api/login', async (req, res) => {
 });
 
 // =====================================
-// ENDPOINT: POST /api/register
+// ENDPOINT: POST /api/register (Registro de Médicos/Doctores)
 // =====================================
 app.post('/api/register', async (req, res) => {
   try {
-    const { nombre, usuario, email, password, especialidad } = req.body;
-
-    // Validar datos
-    if (!nombre || !usuario || !email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: 'Faltan datos requeridos'
-      });
-    }
-
-    // Verificar si el usuario ya existe
-    const userExists = await usersCollection.findOne({ usuario: usuario });
-    if (userExists) {
-      return res.status(400).json({
-        success: false,
-        message: 'El usuario ya existe'
-      });
-    }
-
-    // Crear nuevo usuario
-    const newUser = {
+    const {
       nombre,
-      usuario,
-      email,
-      password, // En producción, encriptar con bcrypt
+      apellidoP,
+      apellidoM,
       especialidad,
+      telefono,
+      fechaNacimiento,
+      correo,
+      email,
+      cedula,
+      usuario,
+      password
+    } = req.body;
+
+    const emailFinal = (correo || email || '').trim();
+    const nombreFinal = (nombre || '').trim();
+    const usuarioFinal = (usuario || emailFinal).trim();
+
+    // Validar datos mínimos requeridos
+    if (!nombreFinal || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Faltan datos requeridos (nombre y contraseña son obligatorios)'
+      });
+    }
+
+    // Verificar si el usuario o correo ya existe
+    if (usuarioFinal) {
+      const userExists = await usersCollection.findOne({
+        $or: [{ usuario: usuarioFinal }, { email: emailFinal }]
+      });
+      if (userExists) {
+        return res.status(400).json({
+          success: false,
+          message: 'El usuario o correo electrónico ya se encuentra registrado'
+        });
+      }
+    }
+
+    // Crear nuevo usuario (médico)
+    const newUser = {
+      nombre: nombreFinal,
+      apellidoP: (apellidoP || '').trim(),
+      apellidoM: (apellidoM || '').trim(),
+      especialidad: (especialidad || '').trim(),
+      telefono: (telefono || '').trim(),
+      fechaNacimiento: fechaNacimiento || '',
+      email: emailFinal,
+      correo: emailFinal,
+      cedula: cedula || '',
+      usuario: usuarioFinal,
+      password, // En producción se recomienda bcrypt
+      rol: 'medico',
       fechaRegistro: new Date()
     };
 
@@ -129,10 +156,13 @@ app.post('/api/register', async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: 'Usuario registrado exitosamente',
+      message: 'Doctor registrado exitosamente',
       data: {
         id: result.insertedId,
-        usuario: usuario
+        usuario: usuarioFinal,
+        nombre: `${nombreFinal} ${(apellidoP || '').trim()}`.trim(),
+        email: emailFinal,
+        especialidad: newUser.especialidad
       }
     });
 
