@@ -1,10 +1,5 @@
-import NavTemporal from '../componentes/NavTemporal';
+import PacienteNuevo from './PacienteNuevo';
 
 export default function RegistroPaciente() {
-  return (
-    <>
-      <NavTemporal />
-      <h1>Registro paciente (pendiente)</h1>
-    </>
-  );
+  return <PacienteNuevo />;
 }

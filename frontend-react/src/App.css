@@ -1,4 +1,4 @@
-/* MediVoz Global Component and Layout Styles */
+/* MediVoz Global Clinical Layout and Component Styles */
 
 .app-container {
   display: flex;
@@ -6,48 +6,956 @@
   min-height: 100vh;
 }
 
-/* Page header utility for clinical pages */
-.page-header {
+/* Header principal institucional */
+.institutional-header {
+  width: 100%;
+  padding: 1.25rem 2rem;
   background: #ffffff;
   border-bottom: 1px solid var(--border-color);
-  padding: 1.5rem 2rem;
+  box-shadow: var(--shadow-sm);
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  margin-bottom: 2rem;
 }
 
-.page-title {
-  margin: 0;
-  font-size: 1.5rem;
-  color: var(--text-main);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+.institutional-header .container-logo {
+  text-align: center;
 }
 
-.badge-doctor {
-  background: var(--primary-light);
+.institutional-header .logo {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #0f172a;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.institutional-header .logo span {
   color: var(--primary);
-  font-size: 0.75rem;
+  background: linear-gradient(135deg, #0284c7 0%, #0d9488 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.institutional-header .subtitle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+  font-weight: 500;
+}
+
+/* Contenedor general */
+.clinical-container {
+  width: 100%;
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 1.75rem 1.5rem 3.5rem;
+}
+
+.page-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.75rem;
+}
+
+.main-content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Sidebar clínica */
+.sidebar {
+  width: 290px;
+  flex-shrink: 0;
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem 1.25rem;
+  box-shadow: var(--shadow-card);
+  position: sticky;
+  top: 75px;
+}
+
+.profile-photo-wrap {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.imagen-circular {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--primary-light);
+  box-shadow: var(--shadow-sm);
+}
+
+.sidebar-name {
+  text-align: center;
+  font-size: 1.15rem;
   font-weight: 700;
-  padding: 0.25rem 0.6rem;
-  border-radius: var(--radius-full);
+  color: var(--text-main);
+  margin: 0.5rem 0 0.2rem;
+}
+
+.sidebar-role {
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
-/* Clinical cards */
+.sidebar-divider {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin: 1.25rem 0;
+}
+
+.info-row {
+  margin-bottom: 0.9rem;
+}
+
+.info-label {
+  display: block;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 0.2rem;
+}
+
+.info-value {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-main);
+  word-break: break-word;
+}
+
+/* Status Pill */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.75rem;
+  background-color: var(--success-bg);
+  border: 1px solid #a7f3d0;
+  border-radius: var(--radius-full);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #065f46;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--success);
+}
+
+/* Grid & Cards clínicos */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
 .clinical-card {
   background: #ffffff;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-color);
   padding: 1.75rem;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-card);
+}
+
+.card-title {
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--text-main);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.card-title .icon {
+  font-size: 1.35rem;
+}
+
+.form-subtitle {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--primary);
+  margin: 1.5rem 0 0.75rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1.5px solid var(--primary-light);
+}
+
+.form-subtitle:first-of-type {
+  margin-top: 0;
+}
+
+.vitals-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.vitals-form-grid label,
+.clinical-card label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 0.35rem;
+}
+
+.readonly-field {
+  background-color: #f1f5f9 !important;
+  color: var(--text-muted) !important;
+  cursor: not-allowed;
+}
+
+/* Tag Inputs & List */
+.tag-input-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.btn-add-tag {
+  background-color: var(--primary);
+  color: white;
+  border-radius: var(--radius-md);
+  padding: 0 1rem;
+  font-weight: 700;
+}
+
+.btn-add-tag:hover {
+  background-color: var(--primary-hover);
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tag-preview-list {
+  margin-bottom: 1rem;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  background-color: #f1f5f9;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-main);
+}
+
+.tag.tag-accent {
+  background-color: var(--primary-light);
+  border-color: #bae6fd;
+  color: var(--primary-hover);
+  font-weight: 600;
+}
+
+.tag.tag-danger {
+  background-color: var(--error-bg);
+  border-color: #fecaca;
+  color: var(--error);
+  font-weight: 600;
+}
+
+.tag-remove {
+  cursor: pointer;
+  font-weight: bold;
+  opacity: 0.6;
   transition: var(--transition);
 }
 
-.clinical-card:hover {
+.tag-remove:hover {
+  opacity: 1;
+  color: var(--error);
+}
+
+/* Checkbox Row */
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.9rem;
+  color: var(--text-main);
+}
+
+.checkbox-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+/* Archivos */
+.file-input-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.btn-attach {
+  background-color: var(--secondary);
+  color: white;
+  border-radius: var(--radius-md);
+  padding: 0 1rem;
+}
+
+.btn-attach:hover {
+  background-color: #115e59;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-page);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.file-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.file-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Mic & Voice Dictation */
+.field-selector {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+  margin-bottom: 1.25rem;
+}
+
+.field-btn {
+  padding: 0.5rem 0.4rem;
+  background: var(--bg-page);
+  color: var(--text-muted);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.field-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.field-btn.active {
+  background-color: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);
+}
+
+.mic-zone {
+  text-align: center;
+  padding: 1.5rem 1rem;
+  margin-bottom: 1.25rem;
+  background: linear-gradient(180deg, #f0f9ff 0%, #f8fafc 100%);
+  border: 1.5px dashed #bae6fd;
+  border-radius: var(--radius-lg);
+}
+
+.mic-btn {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  border: none;
+  background-color: #ffffff;
+  font-size: 2rem;
+  cursor: pointer;
   box-shadow: var(--shadow-md);
-  border-color: #cbd5e1;
+  transition: var(--transition);
+}
+
+.mic-btn:hover {
+  transform: scale(1.06);
+  box-shadow: var(--shadow-lg);
+}
+
+.mic-btn.mic-active {
+  background-color: var(--error);
+  color: white;
+  animation: pulseMic 1.4s infinite;
+}
+
+@keyframes pulseMic {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+  70% { box-shadow: 0 0 0 16px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+.mic-status {
+  margin-top: 0.75rem;
+  color: var(--text-main);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.campo-target {
+  margin-top: 0.3rem;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.campo-target span {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+/* Transcripción */
+.live-transcript-box {
+  background: #ffffff;
+  border: 1.5px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.9rem;
+  min-height: 70px;
+  margin-top: 0.5rem;
+}
+
+.live-transcript-box .label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 0.4rem;
+}
+
+.live-transcript-text {
+  font-family: 'DM Mono', monospace, Consolas;
+  font-size: 0.85rem;
+  color: var(--text-main);
+  line-height: 1.6;
+  min-height: 36px;
+}
+
+/* Consejos */
+.dictation-tips {
+  margin-top: 1.25rem;
+  padding: 1rem 1.25rem;
+  background: var(--primary-light);
+  border-radius: var(--radius-md);
+  border-left: 4px solid var(--primary);
+}
+
+.dictation-tips-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--primary-hover);
+  margin-bottom: 0.4rem;
+}
+
+.dictation-tips ul {
+  font-size: 0.8rem;
+  color: #334155;
+  line-height: 1.6;
+  padding-left: 1.2rem;
+  margin: 0;
+}
+
+/* Registros Table Section */
+.records-section {
+  grid-column: 1 / -1;
+  margin-top: 1.5rem;
+}
+
+.records-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.table-badge {
+  min-width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--primary);
+  color: white;
+  border-radius: var(--radius-full);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.clinical-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.clinical-table thead {
+  background-color: #f8fafc;
+  border-bottom: 1.5px solid var(--border-color);
+}
+
+.clinical-table th {
+  padding: 0.85rem 1rem;
+  text-align: left;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.clinical-table td {
+  padding: 0.85rem 1rem;
+  border-top: 1px solid var(--border-color);
+  color: var(--text-main);
+}
+
+.clinical-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+.btn-ver-receta {
+  background: transparent;
+  border: 1.5px solid var(--primary);
+  color: var(--primary);
+  border-radius: var(--radius-sm);
+  padding: 0.35rem 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-ver-receta:hover {
+  background-color: var(--primary);
+  color: #ffffff;
+}
+
+.empty-state {
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+/* Back Link */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--primary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  margin-bottom: 1.25rem;
+  transition: var(--transition);
+}
+
+.back-link:hover {
+  color: var(--primary-hover);
+  text-decoration: underline;
+}
+
+/* Vitals Cards (Historial & Perfil) */
+.vitals-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.vital-box {
+  background-color: #f8fafc;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  text-align: center;
+}
+
+.vital-value {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.vital-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-top: 0.3rem;
+}
+
+/* History Timeline */
+.history-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+}
+
+.history-grid .stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.timeline {
+  position: relative;
+  padding-left: 24px;
+}
+
+.timeline::before {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  background: var(--border-color);
+}
+
+.timeline-item {
+  position: relative;
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.2rem 1.4rem;
+  margin-bottom: 1.25rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.timeline-item::before {
+  content: "";
+  position: absolute;
+  left: -24px;
+  top: 18px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.timeline-item:last-child {
+  margin-bottom: 0;
+}
+
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.timeline-date {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.timeline-type {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-full);
+  background-color: var(--primary-light);
+  color: var(--primary);
+}
+
+.timeline-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 0.3rem;
+}
+
+.timeline-text {
+  font-size: 0.85rem;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.timeline-doctor {
+  margin-top: 0.6rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Receta Médica */
+.receta-container {
+  max-width: 900px;
+}
+
+.receta-toolbar {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.receta-hoja {
+  background: #ffffff;
+  color: #0f172a;
+  border-radius: var(--radius-lg);
+  padding: 3rem 3.5rem;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border-color);
+}
+
+.receta-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.receta-doctor-nombre {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.receta-doctor-detalle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.receta-folio {
+  text-align: right;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.receta-divider {
+  border: none;
+  border-top: 2px solid var(--primary);
+  margin: 1.25rem 0 1.5rem;
+}
+
+.receta-paciente {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem 1.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.receta-label {
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.receta-section {
+  margin-top: 1.5rem;
+}
+
+.receta-section-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.35rem;
+  margin-bottom: 0.6rem;
+}
+
+.receta-texto {
+  font-size: 0.92rem;
+  line-height: 1.6;
+  min-height: 28px;
+  outline: none;
+  padding: 0.4rem 0.6rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+}
+
+.receta-texto:focus {
+  background: var(--bg-page);
+  border-color: var(--primary);
+}
+
+.receta-lista-texto {
+  white-space: pre-line;
+}
+
+.receta-vitals {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  font-size: 0.85rem;
+}
+
+.receta-rx-titulo {
+  color: var(--primary);
+  font-size: 0.95rem;
+  border-bottom-color: var(--primary);
+}
+
+.receta-firma {
+  margin-top: 4rem;
+  text-align: center;
+  width: 260px;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.receta-firma-linea {
+  border-top: 1.5px solid var(--text-main);
+  margin-bottom: 0.5rem;
+}
+
+.receta-aviso {
+  margin-top: 2rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  background: var(--bg-page);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  text-align: center;
+}
+
+/* Search Card (Perfil) */
+.search-card {
+  margin-bottom: 1.5rem;
+}
+
+.search-bar {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.filters-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+}
+
+/* Toast flotante institucional */
+.toast-notification {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  padding: 0.9rem 1.4rem;
+  background-color: #0f172a;
+  color: #ffffff;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  font-size: 0.9rem;
+  font-weight: 500;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  animation: slideInToast 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.toast-notification.toast-error {
+  background-color: var(--error);
+}
+
+@keyframes slideInToast {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.campo-invalido {
+  border-color: var(--error) !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25) !important;
+}
+
+/* Media queries */
+@media print {
+  .no-print { display: none !important; }
+  body { background: white !important; }
+  .institutional-header, .temp-nav { display: none !important; }
+  .receta-hoja { box-shadow: none; border: none; padding: 0; }
+  .clinical-container { padding: 0; max-width: 100%; }
+}
+
+@media (max-width: 950px) {
+  .page-layout {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+    position: static;
+  }
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  .history-grid {
+    grid-template-columns: 1fr;
+  }
+  .filters-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .vitals-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .receta-paciente {
+    grid-template-columns: 1fr;
+  }
+  .receta-vitals {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .field-selector {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .search-bar {
+    flex-direction: column;
+  }
+  .filters-row {
+    grid-template-columns: 1fr;
+  }
 }
