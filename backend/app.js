@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const { connectToMongo } = require('./db');
+const { connectToMongo, getStatus } = require('./db');
 const apiRoutes = require('./routes');
 
 const app = express();
@@ -13,17 +13,23 @@ app.use(express.json());
 
 // Rutas principales
 app.get('/', (req, res) => {
-  res.json({ status: 'online', message: 'MediVoz API activa' });
+  res.json({ status: 'online', message: 'MediVoz API activa', db: getStatus() });
+});
+
+// Endpoint de estado de base de datos
+app.get('/api/db-status', (req, res) => {
+  res.json(getStatus());
 });
 
 // Montar endpoints bajo el prefijo /api
 app.use('/api', apiRoutes);
 
-// Iniciar servidor tras conectar a MongoDB
-connectToMongo().then(() => {
+// Iniciar servidor inmediatamente y conectar a MongoDB de forma resiliente
+connectToMongo().finally(() => {
   app.listen(PORT, () => {
-    console.log(`\n Servidor corriendo en http://localhost:${PORT}`);
-    console.log(` Base de datos: medivoz`);
+    const status = getStatus();
+    console.log(`\n🚀 Servidor MediVoz corriendo en http://localhost:${PORT}`);
+    console.log(`🔌 Estado DB: ${status.mode} (Conectado a Atlas: ${status.connected ? 'SÍ' : 'NO - Modo Resiliente Activo'})`);
     console.log(`\nEndpoints disponibles:`);
     console.log(`  POST /api/login`);
     console.log(`  POST /api/register`);
@@ -32,6 +38,6 @@ connectToMongo().then(() => {
     console.log(`  GET  /api/doctores`);
     console.log(`  POST /api/citas`);
     console.log(`  GET  /api/citas`);
-    console.log(`  GET  /api/test\n`);
+    console.log(`  GET  /api/db-status\n`);
   });
 });
