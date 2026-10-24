@@ -60,6 +60,8 @@ const createPatientSchema = (data, expediente) => {
 const createConsultaSchema = (data) => {
   return {
     pacienteId: data.pacienteId,
+    pacienteExpediente: data.pacienteExpediente || data.paciente || '',
+    pacienteNombre: data.pacienteNombre || data.pacienteTexto || '',
     medico: data.medico,
     tipoConsulta: data.tipoConsulta || '',
     categoria: data.categoria || '',
@@ -68,12 +70,14 @@ const createConsultaSchema = (data) => {
     frecuencia: data.frecuencia || '',
     temperatura: data.temperatura || '',
     peso: data.peso || '',
+    talla: data.talla || '',
+    imc: data.imc || '',
     sintomas: data.sintomas || '',
     diagnosticos: Array.isArray(data.diagnosticos) ? data.diagnosticos : [],
     medicamentos: Array.isArray(data.medicamentos) ? data.medicamentos : [],
     alergias: Array.isArray(data.alergias) ? data.alergias : [],
     notas: data.notas || '',
-    fecha: new Date(),
+    fecha: data.fecha ? new Date(data.fecha) : new Date(),
     estado: 'Completada'
   };
 };

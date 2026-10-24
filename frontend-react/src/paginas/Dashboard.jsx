@@ -37,7 +37,8 @@ export default function Dashboard() {
                 correo: p.correo || '',
                 estado: p.estado || 'Activo',
                 ultimaVisita: p.ultimaVisita || (p.fechaRegistro ? new Date(p.fechaRegistro).toISOString().split('T')[0] : '—'),
-                sexo: p.sexo || 'Otro'
+                sexo: p.sexo || 'Otro',
+                alergias: p.alergias || []
               });
             }
           });
@@ -256,6 +257,15 @@ export default function Dashboard() {
                             <button
                               type="button"
                               className="btn-ver-receta"
+                              style={{ padding: '0.25rem 0.55rem', fontSize: '0.75rem', backgroundColor: 'var(--primary)', color: 'white', borderColor: 'var(--primary)' }}
+                              onClick={() => navigate(`/consulta/${encodeURIComponent(p.expediente)}`, { state: { paciente: p } })}
+                              title="Iniciar consulta médica para este paciente"
+                            >
+                              🩺 Consulta
+                            </button>
+                            <button
+                              type="button"
+                              className="btn-ver-receta"
                               style={{ padding: '0.25rem 0.55rem', fontSize: '0.75rem' }}
                               onClick={() => navigate(`/paciente/agendar?expediente=${encodeURIComponent(p.expediente)}`)}
                               title="Agendar cita para este paciente"
@@ -266,7 +276,7 @@ export default function Dashboard() {
                               type="button"
                               className="btn-ver-receta"
                               style={{ padding: '0.25rem 0.55rem', fontSize: '0.75rem' }}
-                              onClick={() => navigate(`/historial/${idx + 1}`)}
+                              onClick={() => navigate(`/historial/${encodeURIComponent(p.expediente)}`)}
                             >
                               Historial
                             </button>

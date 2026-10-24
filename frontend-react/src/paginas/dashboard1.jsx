@@ -26,7 +26,7 @@ export default function Dashboard1() {
   const bloques = generarBloques();
 
   const irAConsulta = (cita) => {
-    navigate(`/consulta/${cita.id}`, { state: { cita } });
+    navigate(`/consulta/${cita.expediente || cita.id}`, { state: { cita } });
   };
 
   return (

@@ -98,21 +98,16 @@ export default function Historial() {
             </div>
 
             <div className="sidebar-name">{paciente.nombre}</div>
-            <div className="sidebar-role">Paciente Registrado</div>
+            <div className="sidebar-role">{paciente.expediente}</div>
 
             <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
-              <span className="status-pill">
+              <span className={`status-pill ${paciente.estado === 'Activo' ? 'status-pill-active' : ''}`}>
                 <span className="status-dot"></span>
-                {paciente.estado}
+                Paciente {paciente.estado}
               </span>
             </div>
 
             <hr className="sidebar-divider" />
-
-            <div className="info-row">
-              <span className="info-label">Expediente Clínico</span>
-              <span className="info-value">{paciente.expediente}</span>
-            </div>
 
             <div className="info-row">
               <span className="info-label">Fecha de nacimiento</span>
@@ -125,12 +120,12 @@ export default function Historial() {
             </div>
 
             <div className="info-row">
-              <span className="info-label">Teléfono de contacto</span>
+              <span className="info-label">Teléfono</span>
               <span className="info-value">{paciente.telefono}</span>
             </div>
 
             <div className="info-row">
-              <span className="info-label">Correo electrónico</span>
+              <span className="info-label">Correo</span>
               <span className="info-value">{paciente.correo}</span>
             </div>
 
@@ -155,7 +150,7 @@ export default function Historial() {
               type="button"
               className="btn-primary"
               style={{ width: '100%', marginBottom: '0.6rem' }}
-              onClick={() => navigate('/consulta/1')}
+              onClick={() => navigate(`/consulta/${encodeURIComponent(paciente.expediente || id || 'EXP-000001')}`, { state: { paciente } })}
             >
               🎤 Iniciar Consulta
             </button>

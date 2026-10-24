@@ -225,8 +225,12 @@ router.get('/consultas/:pacienteId', async (req, res) => {
     const { consultas } = getCollections();
     const { pacienteId } = req.params;
 
+    const query = ObjectId.isValid(pacienteId)
+      ? { $or: [{ pacienteId: new ObjectId(pacienteId) }, { pacienteId: pacienteId }, { pacienteExpediente: pacienteId }] }
+      : { $or: [{ pacienteId: pacienteId }, { pacienteExpediente: pacienteId }] };
+
     const listaConsultas = await consultas
-      .find({ pacienteId: new ObjectId(pacienteId) })
+      .find(query)
       .sort({ fecha: -1 })
       .toArray();
 
