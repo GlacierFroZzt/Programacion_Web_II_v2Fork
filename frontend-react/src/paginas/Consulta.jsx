@@ -2,48 +2,8 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import NavTemporal from '../componentes/NavTemporal';
 import HeaderClinico from '../componentes/HeaderClinico';
-import { obtenerPacientes, guardarConsulta } from '../api/api';
+import { obtenerPacientes, guardarConsulta, obtenerConsultasPorPaciente } from '../api/api';
 import '../App.css';
-
-// Pacientes precargados de respaldo clínico para garantizar disponibilidad inmediata
-const PACIENTES_DEFAULT = [
-  {
-    expediente: 'EXP-000001',
-    nombre: 'Carlos Gómez Ruiz',
-    edad: '36',
-    fechaNacimiento: '1988-05-14',
-    sexo: 'Masculino',
-    tipoSangre: 'O+',
-    telefono: '+52 81 1234 5678',
-    correo: 'carlos.gomez@email.com',
-    alergias: ['Penicilina', 'Sulfas'],
-    estado: 'Activo'
-  },
-  {
-    expediente: 'EXP-000002',
-    nombre: 'María López Pérez',
-    edad: '42',
-    fechaNacimiento: '1984-09-22',
-    sexo: 'Femenino',
-    tipoSangre: 'A+',
-    telefono: '+52 81 8765 4321',
-    correo: 'maria.lopez@email.com',
-    alergias: [],
-    estado: 'Activo'
-  },
-  {
-    expediente: 'EXP-000003',
-    nombre: 'Roberto Fernández Morales',
-    edad: '58',
-    fechaNacimiento: '1968-01-30',
-    sexo: 'Masculino',
-    tipoSangre: 'B+',
-    telefono: '+52 81 9988 7766',
-    correo: 'roberto.fernandez@email.com',
-    alergias: ['Aspirina / AINEs'],
-    estado: 'Activo'
-  }
-];
 
 const SUGERENCIAS_SINTOMAS = [
   'Cefalea pulsátil de intensidad moderada',
@@ -104,18 +64,16 @@ export default function Consulta() {
   const { id } = useParams();
   const location = useLocation();
 
-  // Lista de pacientes
-  const [pacientes, setPacientes] = useState(() => {
-    const guardados = JSON.parse(sessionStorage.getItem('mv_pacientes') || '[]');
-    return guardados.length > 0 ? guardados : PACIENTES_DEFAULT;
-  });
+  // Lista de pacientes cargados exclusivamente desde MongoDB Atlas
+  const [pacientes, setPacientes] = useState([]);
+  const [cargandoPacientes, setCargandoPacientes] = useState(true);
 
   // Paciente seleccionado actualmente
   const [pacienteActual, setPacienteActual] = useState(null);
   const [mostrarSelectorPaciente, setMostrarSelectorPaciente] = useState(false);
   const [busquedaPaciente, setBusquedaPaciente] = useState('');
 
-  // Historial de consultas registradas en sesión
+  // Historial de consultas registradas en sesión y MongoDB
   const [registros, setRegistros] = useState(() => {
     return JSON.parse(sessionStorage.getItem('mv_registros') || '[]');
   });
@@ -171,12 +129,14 @@ export default function Consulta() {
   const [micError, setMicError] = useState('');
   const recognitionRef = useRef(null);
 
-  // Sincronizar pacientes con MongoDB Atlas
+  // Cargar lista fresca y real de pacientes exclusivamente desde MongoDB Atlas
   useEffect(() => {
     let activo = true;
+    setCargandoPacientes(true);
+
     obtenerPacientes()
       .then(res => {
-        if (activo && res && res.success && Array.isArray(res.data) && res.data.length > 0) {
+        if (activo && res && res.success && Array.isArray(res.data)) {
           const map = new Map();
           res.data.forEach(p => {
             if (p.expediente && !map.has(p.expediente)) {
@@ -188,12 +148,13 @@ export default function Consulta() {
                 calcEdad = String(hoy.getFullYear() - nac.getFullYear());
               }
               map.set(p.expediente, {
+                _id: p._id,
                 expediente: p.expediente,
                 nombre: nombreCompleto,
                 edad: calcEdad,
                 fechaNacimiento: p.fechaNacimiento || '',
                 sexo: p.sexo || 'Otro',
-                tipoSangre: p.tipoSangre || 'O+',
+                tipoSangre: p.tipoSangre || '—',
                 telefono: p.telefono || '—',
                 correo: p.correo || '',
                 alergias: Array.isArray(p.alergias) ? p.alergias : (p.alergias ? [p.alergias] : []),
@@ -206,64 +167,49 @@ export default function Consulta() {
           sessionStorage.setItem('mv_pacientes', JSON.stringify(listaFresca));
         }
       })
-      .catch(err => console.warn('Cargando con lista de pacientes local:', err));
+      .catch(err => console.error('Error cargando pacientes desde MongoDB:', err))
+      .finally(() => {
+        if (activo) setCargandoPacientes(false);
+      });
+
     return () => { activo = false; };
   }, []);
 
-  // Cargar y PRECARGAR los datos del paciente automáticamente
+  // Seleccionar automáticamente el paciente de MongoDB adecuado
   useEffect(() => {
+    if (pacientes.length === 0) return;
+
     let pacienteEncontrado = null;
 
-    // 1. Prioridad: paciente enviado en el estado de navegación
     if (location.state?.paciente) {
-      pacienteEncontrado = location.state.paciente;
-    }
-    // 2. Cita enviada desde la agenda (dashboard1)
-    else if (location.state?.cita) {
+      pacienteEncontrado = pacientes.find(p => p.expediente === location.state.paciente.expediente) || location.state.paciente;
+    } else if (location.state?.cita) {
       const cita = location.state.cita;
       pacienteEncontrado = pacientes.find(p => p.expediente === cita.expediente || p.nombre === cita.paciente);
-      if (!pacienteEncontrado) {
-        pacienteEncontrado = {
-          expediente: cita.expediente || 'EXP-000001',
-          nombre: cita.paciente || 'Paciente Cita',
-          edad: '36',
-          sexo: 'Masculino',
-          tipoSangre: 'O+',
-          telefono: '+52 81 1234 5678',
-          correo: 'contacto@paciente.com',
-          alergias: ['Penicilina'],
-          estado: 'Activo'
-        };
-      }
-      // Precargar motivo de la cita y hora
       if (cita.motivo) {
         setForm(prev => ({ ...prev, sintomas: cita.motivo, hora: cita.hora || prev.hora }));
       }
-    }
-    // 3. Buscar por el parámetro 'id' de la URL (expediente o número)
-    else if (id) {
+    } else if (id) {
       const expBuscado = id.startsWith('EXP') ? id : `EXP-${String(id).padStart(6, '0')}`;
-      pacienteEncontrado = pacientes.find((p, idx) => p.expediente === id || p.expediente === expBuscado || String(idx + 1) === String(id));
+      pacienteEncontrado = pacientes.find((p, idx) => p.expediente === id || p.expediente === expBuscado || String(idx + 1) === String(id) || p._id === id);
     }
 
-    // 4. Fallback por omisión: primer paciente disponible
     if (!pacienteEncontrado && pacientes.length > 0) {
       pacienteEncontrado = pacientes[0];
     }
 
-    // Aplicar la precarga de datos al estado
     if (pacienteEncontrado) {
       aplicarDatosPaciente(pacienteEncontrado);
     }
   }, [id, location.state, pacientes]);
 
-  // Función para precargar y sincronizar datos del paciente seleccionado
-  const aplicarDatosPaciente = (p) => {
+  // Precargar datos del paciente real seleccionado
+  const aplicarDatosPaciente = async (p) => {
     setPacienteActual(p);
     setForm(prev => ({ ...prev, paciente: p.expediente }));
 
-    // Precargar las alergias conocidas del paciente
-    const alergiasPaciente = Array.isArray(p.alergias) ? p.alergias : (p.alergias ? [p.alergias] : []);
+    // Cargar alergias reales del paciente desde MongoDB Atlas
+    const alergiasPaciente = (p.alergias || []).filter(a => a && a !== 'Ninguna');
     if (alergiasPaciente.length > 0) {
       setAlergias(alergiasPaciente);
       setSinAlergias(false);
@@ -271,14 +217,33 @@ export default function Consulta() {
       setAlergias([]);
       setSinAlergias(true);
     }
+
+    // Cargar consultas previas de este paciente desde MongoDB Atlas
+    try {
+      const resConsultas = await obtenerConsultasPorPaciente(p.expediente);
+      if (resConsultas && resConsultas.success && Array.isArray(resConsultas.data)) {
+        // Mezclar con las de sesión sin duplicar
+        setRegistros(prev => {
+          const map = new Map();
+          resConsultas.data.forEach(c => map.set(c._id || c.id, {
+            ...c,
+            id: c._id || c.id,
+            pacienteTexto: c.pacienteNombre ? `${c.pacienteNombre} · ${c.pacienteExpediente}` : p.nombre
+          }));
+          prev.forEach(c => map.set(c.id, c));
+          return Array.from(map.values());
+        });
+      }
+    } catch (errConsultas) {
+      console.warn('Consultas de MongoDB no disponibles:', errConsultas);
+    }
   };
 
-  // Guardar en sessionStorage
   useEffect(() => {
     sessionStorage.setItem('mv_registros', JSON.stringify(registros));
   }, [registros]);
 
-  // Cálculo automático y dinámico de IMC (Índice de Masa Corporal)
+  // Cálculo de IMC
   const imcData = useMemo(() => {
     const pesoNum = parseFloat(form.peso);
     const tallaNum = parseFloat(form.talla);
@@ -305,13 +270,11 @@ export default function Consulta() {
     setTimeout(() => setCampoInvalido(''), 1600);
   };
 
-  // Manejo de cambios en el formulario
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
-  // Cambio de paciente desde selector rápido
   const seleccionarPacientePorExpediente = (expediente) => {
     if (expediente === '__nuevo__') {
       navigate('/paciente/nuevo');
@@ -325,7 +288,7 @@ export default function Consulta() {
     }
   };
 
-  // Control de reconocimiento de voz
+  // Reconocimiento de voz
   const detenerMic = () => {
     if (recognitionRef.current) {
       try {
@@ -334,7 +297,7 @@ export default function Consulta() {
         recognitionRef.current.onend = null;
         recognitionRef.current.stop();
       } catch (e) {
-        // Ignorar si ya estaba cerrado
+        // Ignorar
       }
       recognitionRef.current = null;
     }
@@ -367,7 +330,7 @@ export default function Consulta() {
         stream.getTracks().forEach(track => track.stop());
       }
     } catch (permErr) {
-      console.warn('Permiso de micrófono no otorgado:', permErr);
+      console.warn('Permiso de micrófono denegado:', permErr);
       const msg = 'Permiso de micrófono denegado. Habilita el acceso en tu navegador.';
       setMicError(msg);
       mostrarToast(msg, 'error');
@@ -489,7 +452,7 @@ export default function Consulta() {
     }
   };
 
-  // Guardar consulta (en MongoDB y sessionStorage)
+  // Guardar consulta directamente en MongoDB Atlas
   const guardarRegistroConsulta = async (redireccionarAReceta = false) => {
     if (!pacienteActual) {
       mostrarToast('Selecciona un paciente antes de guardar.', 'error');
@@ -497,11 +460,11 @@ export default function Consulta() {
     }
 
     const pacienteTexto = `${pacienteActual.nombre} · ${pacienteActual.expediente}`;
-    const nuevoId = registros.length ? Math.max(...registros.map(r => r.id)) + 1 : 1;
+    const nuevoId = registros.length ? Math.max(...registros.map(r => r.id || 0)) + 1 : 1;
 
     const registroData = {
       id: nuevoId,
-      pacienteId: pacienteActual._id || pacienteActual.expediente,
+      pacienteId: pacienteActual.expediente,
       pacienteExpediente: pacienteActual.expediente,
       pacienteTexto,
       ...form,
@@ -513,17 +476,9 @@ export default function Consulta() {
       generadoEl: new Date().toISOString()
     };
 
-    // Actualizar estado local y sessionStorage
-    const nuevosRegistros = [registroData, ...registros];
-    setRegistros(nuevosRegistros);
-
-    const recetasObj = JSON.parse(sessionStorage.getItem('mv_recetas') || '{}');
-    recetasObj[nuevoId] = registroData;
-    sessionStorage.setItem('mv_recetas', JSON.stringify(recetasObj));
-
-    // Guardar en MongoDB Atlas mediante la API del backend
+    // Guardar en MongoDB Atlas
     try {
-      await guardarConsulta({
+      const resGuardado = await guardarConsulta({
         pacienteId: pacienteActual.expediente,
         pacienteExpediente: pacienteActual.expediente,
         pacienteNombre: pacienteActual.nombre,
@@ -543,18 +498,29 @@ export default function Consulta() {
         alergias: sinAlergias ? ['Sin alergias conocidas'] : alergias,
         notas: form.notas
       });
+
+      if (resGuardado && resGuardado.success) {
+        mostrarToast('Consulta guardada exitosamente en MongoDB Atlas.');
+      } else {
+        mostrarToast('Consulta registrada localmente.');
+      }
     } catch (apiErr) {
-      console.warn('Consulta respaldada localmente (API offline):', apiErr);
+      console.warn('API error al guardar consulta en MongoDB:', apiErr);
+      mostrarToast('Consulta respaldada localmente (servidor no disponible).');
     }
 
-    mostrarToast('Consulta clínica guardada exitosamente.');
+    const nuevosRegistros = [registroData, ...registros];
+    setRegistros(nuevosRegistros);
+
+    const recetasObj = JSON.parse(sessionStorage.getItem('mv_recetas') || '{}');
+    recetasObj[nuevoId] = registroData;
+    sessionStorage.setItem('mv_recetas', JSON.stringify(recetasObj));
 
     if (redireccionarAReceta) {
       setTimeout(() => navigate(`/receta/${nuevoId}`), 300);
     }
   };
 
-  // Limpiar formulario para nueva consulta
   const limpiarFormulario = () => {
     setForm(prev => ({
       ...prev,
@@ -579,11 +545,11 @@ export default function Consulta() {
     mostrarToast('Formulario restablecido para nueva consulta.');
   };
 
-  // Consultas del paciente actual
   const registrosDelPaciente = useMemo(() => {
     if (!pacienteActual) return [];
     return registros.filter(r =>
       r.pacienteExpediente === pacienteActual.expediente ||
+      r.pacienteId === pacienteActual.expediente ||
       (r.pacienteTexto && r.pacienteTexto.includes(pacienteActual.expediente))
     );
   }, [registros, pacienteActual]);
@@ -597,7 +563,6 @@ export default function Consulta() {
     );
   }, [pacientes, busquedaPaciente]);
 
-  // Iniciales del paciente
   const inicialesPaciente = useMemo(() => {
     if (!pacienteActual?.nombre) return 'PX';
     const partes = pacienteActual.nombre.trim().split(/\s+/);
@@ -605,15 +570,43 @@ export default function Consulta() {
     return partes[0].slice(0, 2).toUpperCase();
   }, [pacienteActual]);
 
+  if (cargandoPacientes) {
+    return (
+      <div className="app-container">
+        <NavTemporal />
+        <HeaderClinico />
+        <div className="clinical-container" style={{ textAlign: 'center', padding: '3rem' }}>
+          <p>Conectando y cargando pacientes desde MongoDB Atlas...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (pacientes.length === 0) {
+    return (
+      <div className="app-container">
+        <NavTemporal />
+        <HeaderClinico />
+        <div className="clinical-container" style={{ textAlign: 'center', padding: '3rem' }}>
+          <h2>No hay pacientes registrados en MongoDB Atlas</h2>
+          <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+            Para iniciar el registro de consultas clínicas, registra tu primer paciente en el sistema.
+          </p>
+          <button type="button" className="btn-primary" onClick={() => navigate('/paciente/nuevo')}>
+            + Registrar Primer Paciente
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="app-container">
       <NavTemporal />
       <HeaderClinico />
 
       <div className="clinical-container">
-        {/* =========================================================
-            1. FICHA CLÍNICA DEL PACIENTE PRECARGADO (BANNER DESTACADO)
-            ========================================================= */}
+        {/* FICHA CLÍNICA DEL PACIENTE PRECARGADO DESDE MONGODB */}
         {pacienteActual && (
           <div className="patient-summary-banner">
             <div className="patient-banner-top">
@@ -701,23 +694,23 @@ export default function Consulta() {
                         <strong>{p.nombre}</strong>
                         <span style={{ marginLeft: '0.5rem', color: 'var(--text-muted)', fontSize: '0.78rem' }}>({p.expediente})</span>
                       </div>
-                      <span className="tag" style={{ fontSize: '0.72rem' }}>{p.sexo} · {p.edad} años</span>
+                      <span className="tag" style={{ fontSize: '0.72rem' }}>{p.sexo} · {p.edad}</span>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Metadatos demográficos del paciente precargado */}
+            {/* Metadatos demográficos del paciente precargado de MongoDB */}
             <div className="patient-meta-grid">
               <div className="meta-item">
                 <span className="meta-item-label">Edad / Sexo</span>
-                <span className="meta-item-value">{pacienteActual.edad || '36'} años · {pacienteActual.sexo || 'Masculino'}</span>
+                <span className="meta-item-value">{pacienteActual.edad} · {pacienteActual.sexo}</span>
               </div>
               <div className="meta-item">
                 <span className="meta-item-label">Tipo de Sangre</span>
                 <span className="meta-item-value" style={{ color: 'var(--primary)', fontWeight: 700 }}>
-                  🩸 {pacienteActual.tipoSangre || 'O+'}
+                  🩸 {pacienteActual.tipoSangre || '—'}
                 </span>
               </div>
               <div className="meta-item">
@@ -731,31 +724,29 @@ export default function Consulta() {
               <div className="meta-item">
                 <span className="meta-item-label">Estado</span>
                 <span className="meta-item-value" style={{ color: 'var(--success)' }}>
-                  ✓ {pacienteActual.estado || 'Activo'}
+                  ✓ {pacienteActual.estado || 'Activo'} (MongoDB)
                 </span>
               </div>
             </div>
 
-            {/* Alerta Destacada de Alergias Conocidas */}
+            {/* Alerta de Alergias Reales */}
             {alergias.length > 0 && !sinAlergias ? (
               <div className="patient-allergy-alert has-allergies">
                 <span>⚠️</span>
                 <span>
-                  <strong>ALERGIAS REGISTRADAS:</strong> {alergias.join(', ')}. Verifica contraindicaciones al formular medicamentos.
+                  <strong>ALERGIAS REGISTRADAS EN MONGODB:</strong> {alergias.join(', ')}. Verifica contraindicaciones al formular medicamentos.
                 </span>
               </div>
             ) : (
               <div className="patient-allergy-alert no-allergies">
                 <span>🛡️</span>
-                <span><strong>Alergias:</strong> Sin alergias medicamentosas conocidas reportadas en el expediente.</span>
+                <span><strong>Alergias:</strong> Sin alergias medicamentosas conocidas reportadas en MongoDB Atlas.</span>
               </div>
             )}
           </div>
         )}
 
-        {/* =========================================================
-            2. BARRA INTELIGENTE DE DICTADO POR VOZ
-            ========================================================= */}
+        {/* BARRA INTELIGENTE DE DICTADO */}
         <div className={`smart-voice-bar ${escuchando ? 'is-listening' : ''}`}>
           <div className="voice-status-indicator">
             <button
@@ -802,11 +793,8 @@ export default function Consulta() {
           )}
         </div>
 
-        {/* =========================================================
-            3. CUERPO PRINCIPAL DE LA CONSULTA Y SIDEBAR DE CONTROL
-            ========================================================= */}
+        {/* CUERPO PRINCIPAL DE LA CONSULTA */}
         <div className="consultation-layout">
-          {/* Columna Izquierda: Formulario Clínico Estructurado */}
           <main style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
 
             {/* Tarjeta 1: Datos de la Atención y Signos Vitales */}
@@ -819,7 +807,6 @@ export default function Consulta() {
                 <span className="clinical-card-header-badge">Paso 1 de 4</span>
               </div>
 
-              {/* Fila de parámetros de la consulta */}
               <div className="vitals-inputs-grid" style={{ marginBottom: '1.25rem' }}>
                 <div>
                   <label htmlFor="tipoConsulta">Tipo de Consulta</label>
@@ -878,7 +865,6 @@ export default function Consulta() {
                 Signos Vitales y Somatometría
               </div>
 
-              {/* Inputs de signos vitales */}
               <div className="vitals-inputs-grid">
                 <div>
                   <label htmlFor="presion">Presión Arterial</label>
@@ -986,7 +972,6 @@ export default function Consulta() {
                 </div>
               </div>
 
-              {/* Widget dinámico de IMC */}
               {imcData.valor && (
                 <div className={`bmi-widget ${imcData.clase}`}>
                   <div className="bmi-value-box">
@@ -999,7 +984,7 @@ export default function Consulta() {
               )}
             </div>
 
-            {/* Tarjeta 2: Anamnesis y Exploración Física con Dictado Directo */}
+            {/* Tarjeta 2: Anamnesis y Exploración Física */}
             <div className="clinical-card">
               <div className="clinical-card-header">
                 <div className="clinical-card-header-title">
@@ -1009,7 +994,6 @@ export default function Consulta() {
                 <span className="clinical-card-header-badge">Paso 2 de 4</span>
               </div>
 
-              {/* Motivo de consulta y síntomas */}
               <div style={{ marginBottom: '1.25rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
                   <label htmlFor="sintomas" style={{ margin: 0 }}>
@@ -1040,7 +1024,6 @@ export default function Consulta() {
                   </button>
                 </div>
 
-                {/* Chips de sugerencias frecuentes */}
                 <div className="quick-chips-row">
                   <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', alignSelf: 'center', marginRight: '0.2rem' }}>Sugerencias:</span>
                   {SUGERENCIAS_SINTOMAS.slice(0, 4).map((s, idx) => (
@@ -1056,7 +1039,6 @@ export default function Consulta() {
                 </div>
               </div>
 
-              {/* Exploración física y notas clínicas */}
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
                   <label htmlFor="notas" style={{ margin: 0 }}>
@@ -1127,7 +1109,6 @@ export default function Consulta() {
                 <button className="btn-add-tag" type="button" onClick={() => agregarDiagnostico()}>+</button>
               </div>
 
-              {/* Sugerencias de diagnósticos */}
               <div className="quick-chips-row">
                 <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', alignSelf: 'center', marginRight: '0.2rem' }}>Frecuentes:</span>
                 {SUGERENCIAS_DIAGNOSTICOS.map((d, idx) => (
@@ -1142,7 +1123,6 @@ export default function Consulta() {
                 ))}
               </div>
 
-              {/* Lista de diagnósticos asignados */}
               <div className="tag-list tag-preview-list">
                 {diagnosticos.map((d, i) => (
                   <span key={i} className="tag tag-accent" style={{ padding: '0.4rem 0.85rem' }}>
@@ -1157,9 +1137,8 @@ export default function Consulta() {
 
               <hr className="sidebar-divider" style={{ margin: '1rem 0' }} />
 
-              {/* Gestión de Alergias */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                <label style={{ margin: 0, fontWeight: 700 }}>Alergias del Paciente</label>
+                <label style={{ margin: 0, fontWeight: 700 }}>Alergias Documentadas</label>
                 <div className="checkbox-row" style={{ margin: 0 }}>
                   <input
                     type="checkbox"
@@ -1220,7 +1199,6 @@ export default function Consulta() {
                 <span className="clinical-card-header-badge">Paso 4 de 4</span>
               </div>
 
-              {/* Constructor de medicamento */}
               <div className="rx-builder-container">
                 <div className="rx-builder-grid">
                   <div>
@@ -1244,7 +1222,6 @@ export default function Consulta() {
                   </div>
                 </div>
 
-                {/* Chips de fármacos comunes para agilizar la captura */}
                 <div className="quick-chips-row" style={{ marginBottom: '0.75rem' }}>
                   <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', alignSelf: 'center', marginRight: '0.2rem' }}>Plantillas:</span>
                   {FARMACOS_FRECUENTES.map((f, idx) => (
@@ -1269,7 +1246,6 @@ export default function Consulta() {
                 </button>
               </div>
 
-              {/* Lista de medicamentos prescritos */}
               <div className="rx-med-cards-list">
                 {medicamentos.map((m, i) => (
                   <div key={i} className="rx-med-item-card">
@@ -1294,7 +1270,6 @@ export default function Consulta() {
                 )}
               </div>
 
-              {/* Estudios y archivos adjuntos */}
               <hr className="sidebar-divider" style={{ margin: '1rem 0' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                 <label style={{ margin: 0, fontWeight: 700 }}>Estudios de Laboratorio e Imagenología</label>
@@ -1329,15 +1304,13 @@ export default function Consulta() {
             </div>
           </main>
 
-          {/* =========================================================
-              4. SIDEBAR CLÍNICO: RESUMEN DE LA CONSULTA Y ACCIONES
-              ========================================================= */}
+          {/* SIDEBAR CLÍNICO */}
           <aside className="consultation-summary-panel">
             <div style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
               <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--primary)', letterSpacing: '0.05em' }}>
-                Resumen de Consulta
+                Resumen de Consulta (MongoDB)
               </div>
-              <div style={{ fontSize: '1.05rem', fontWeight: 800, color: varText => 'var(--text-main)', marginTop: '0.2rem' }}>
+              <div style={{ fontSize: '1.05rem', fontWeight: 800, marginTop: '0.2rem' }}>
                 {pacienteActual?.nombre || 'Paciente'}
               </div>
               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
@@ -1345,7 +1318,6 @@ export default function Consulta() {
               </div>
             </div>
 
-            {/* Checklist de progreso */}
             <div className="summary-checklist">
               <div className={`summary-check-item ${pacienteActual ? 'done' : ''}`}>
                 <span>Paciente identificado</span>
@@ -1369,7 +1341,6 @@ export default function Consulta() {
               </div>
             </div>
 
-            {/* Acciones principales de guardado */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
               <button
                 type="button"
@@ -1377,7 +1348,7 @@ export default function Consulta() {
                 style={{ width: '100%', padding: '0.85rem', fontWeight: 700, fontSize: '0.92rem' }}
                 onClick={() => guardarRegistroConsulta(false)}
               >
-                💾 Guardar Consulta
+                💾 Guardar Consulta en MongoDB
               </button>
 
               <button
@@ -1408,7 +1379,6 @@ export default function Consulta() {
 
             <hr className="sidebar-divider" style={{ margin: '0.5rem 0' }} />
 
-            {/* Accesos rápidos de navegación médica */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
               <button
                 type="button"
@@ -1431,9 +1401,7 @@ export default function Consulta() {
           </aside>
         </div>
 
-        {/* =========================================================
-            5. CONSULTAS GUARDADAS E HISTORIAL CLÍNICO
-            ========================================================= */}
+        {/* CONSULTAS GUARDADAS EN MONGODB ATLAS */}
         <div className="clinical-card records-section" style={{ marginTop: '2rem' }}>
           <div className="consultation-tabs-nav">
             <button
@@ -1441,7 +1409,7 @@ export default function Consulta() {
               className={`tab-nav-btn ${tabHistorial === 'paciente' ? 'tab-active' : ''}`}
               onClick={() => setTabHistorial('paciente')}
             >
-              📋 Consultas Previas de {pacienteActual?.nombre || 'este paciente'} ({registrosDelPaciente.length})
+              📋 Consultas de {pacienteActual?.nombre || 'este paciente'} en MongoDB ({registrosDelPaciente.length})
             </button>
 
             <button
@@ -1449,7 +1417,7 @@ export default function Consulta() {
               className={`tab-nav-btn ${tabHistorial === 'todos' ? 'tab-active' : ''}`}
               onClick={() => setTabHistorial('todos')}
             >
-              🕒 Todas las Consultas de la Sesión ({registros.length})
+              🕒 Todas las Consultas Registradas ({registros.length})
             </button>
           </div>
 
@@ -1468,24 +1436,24 @@ export default function Consulta() {
                 </tr>
               </thead>
               <tbody>
-                {(tabHistorial === 'paciente' ? registrosDelPaciente : registros).map(r => (
-                  <tr key={r.id}>
-                    <td><strong>#{r.id}</strong></td>
-                    <td>{r.pacienteTexto}</td>
-                    <td>{r.tipoConsulta}</td>
+                {(tabHistorial === 'paciente' ? registrosDelPaciente : registros).map((r, idx) => (
+                  <tr key={r.id || r._id || idx}>
+                    <td><strong>#{r.id || idx + 1}</strong></td>
+                    <td>{r.pacienteTexto || r.pacienteNombre}</td>
+                    <td>{r.tipoConsulta || 'Consulta general'}</td>
                     <td>{(r.diagnosticos || []).join(', ') || '—'}</td>
                     <td>{r.presion || '—'} · {r.temperatura ? `${r.temperatura}°C` : '—'}</td>
                     <td>
                       <span className={`tag ${r.severidad === 'Grave' || r.severidad === 'Crítico' ? 'tag-danger' : 'tag-accent'}`}>
-                        {r.severidad}
+                        {r.severidad || 'Leve'}
                       </span>
                     </td>
-                    <td>{r.fecha || '—'}</td>
+                    <td>{r.fecha ? new Date(r.fecha).toLocaleDateString('es-MX') : '—'}</td>
                     <td>
                       <button
                         type="button"
                         className="btn-ver-receta"
-                        onClick={() => navigate(`/receta/${r.id}`)}
+                        onClick={() => navigate(`/receta/${r.id || r._id || idx + 1}`)}
                       >
                         Ver receta
                       </button>
@@ -1497,8 +1465,8 @@ export default function Consulta() {
                   <tr>
                     <td colSpan={8} className="empty-state">
                       {tabHistorial === 'paciente'
-                        ? 'Este paciente aún no tiene consultas previas guardadas en esta sesión.'
-                        : 'No hay consultas guardadas en esta sesión aún.'}
+                        ? 'Este paciente aún no tiene consultas registradas en MongoDB Atlas.'
+                        : 'No hay consultas registradas en la base de datos.'}
                     </td>
                   </tr>
                 )}
@@ -1508,7 +1476,6 @@ export default function Consulta() {
         </div>
       </div>
 
-      {/* Notificación Toast */}
       {toast.visible && (
         <div className={`toast-notification ${toast.tipo === 'error' ? 'toast-error' : ''}`}>
           {toast.mensaje}
