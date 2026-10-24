@@ -40,7 +40,13 @@ router.post('/login', validarLogin, async (req, res) => {
     const { users } = getCollections();
     const { usuario, password } = req.body;
 
-    const user = await users.findOne({ usuario: usuario });
+    const user = await users.findOne({
+      $or: [
+        { usuario: usuario },
+        { email: usuario },
+        { correo: usuario }
+      ]
+    });
     if (!user) {
       return res.status(401).json({
         success: false,
